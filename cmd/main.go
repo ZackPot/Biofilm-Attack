@@ -20,11 +20,13 @@ type Game struct {
 func (g *Game) Update() error {
 	g.ticks++
 	g.hero.Update(g.ticks)
-
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	for enemy := range g.enemies {
+		g.enemies[enemy].BacteriaDraw(screen, g.ticks)
+	}
 	g.hero.HeroDraw(screen)
 }
 
@@ -38,14 +40,14 @@ func main() {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
-	enemyImg, _, err := ebitenutil.NewImageFromFile("assets/main.png")
+	enemyImg, _, err := ebitenutil.NewImageFromFile("assets/proteases.png")
 	if err != nil {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
 	game := &Game{
 		hero:    player.New(heroImg),
-		enemies: []*enemy.Enemy{enemy.NewEnemy(enemyImg, 1)},
+		enemies: enemy.NewEnemy(enemyImg, 1),
 	}
 
 	ebiten.SetWindowSize(640, 480)

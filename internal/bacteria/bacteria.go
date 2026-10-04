@@ -16,17 +16,22 @@ type Enemy struct {
 	AnimOffset     float64
 }
 
-func NewEnemy(sprite *ebiten.Image, quantity int) *Enemy {
+func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 	enemies := make([]*Enemy, 0, quantity)
 
 	for i := 0; i < quantity; i++ {
 		enemies = append(enemies, &Enemy{
 			Spritesheet:    sprite,
+			XSpeed:         1,
+			YSpeed:         1,
 			AnimationSpeed: 5,
 			AnimOffset:     float64(i),
+			State:          1,
+			X:              float64(50 + i*50),
+			Y:              float64(50 + i*50),
 		})
 	}
-	return nil
+	return enemies
 }
 
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
@@ -41,6 +46,7 @@ func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 	var op ebiten.DrawImageOptions
 	jiggle := math.Round(math.Sin(float64(ticks)*0.05) + e.AnimOffset*0.5)
 	op.GeoM.Translate(e.X, e.Y+jiggle)
+	op.GeoM.Scale(1.5, 1.5)
 
 	screen.DrawImage(currentFrameSprite, &op)
 }
