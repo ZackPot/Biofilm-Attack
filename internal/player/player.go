@@ -21,7 +21,7 @@ func New(sprite *ebiten.Image) *Player {
 		Y:              100,
 		Spritesheet:    sprite,
 		State:          1,
-		XSpeed:         1,
+		XSpeed:         2,
 		YSpeed:         1,
 		AnimationSpeed: 20,
 		HasMoved:       false,
@@ -29,6 +29,8 @@ func New(sprite *ebiten.Image) *Player {
 }
 
 func (p *Player) Update(ticks int) {
+	p.HasMoved = false
+
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		p.Y -= p.YSpeed
 		p.HasMoved = true
@@ -47,14 +49,14 @@ func (p *Player) Update(ticks int) {
 
 	if p.X < 0 {
 		p.X = 0
-	} else if p.X > 600 {
-		p.X = 600
+	} else if p.X > 600-64 {
+		p.X = 600 - 64
 	}
 
 	if p.Y < 0 {
 		p.Y = 0
-	} else if p.Y > 480 {
-		p.Y = 480
+	} else if p.Y > 480-64 {
+		p.Y = 480 - 64
 	}
 
 	if p.HasMoved {
@@ -80,8 +82,8 @@ func (p *Player) HeroDraw(screen *ebiten.Image) {
 	currentFrameSprite := p.Spritesheet.SubImage(cropRect).(*ebiten.Image)
 
 	var op ebiten.DrawImageOptions
-	op.GeoM.Translate(p.X, p.Y)
 	op.GeoM.Scale(2, 2)
+	op.GeoM.Translate(p.X, p.Y)
 
 	screen.DrawImage(currentFrameSprite, &op)
 }
