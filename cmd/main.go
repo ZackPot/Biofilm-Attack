@@ -11,19 +11,34 @@ import (
 )
 
 type Game struct {
-	hero    *player.Player
-	enemies []*enemy.Enemy
-	level   int
-	ticks   int
+	hero        *player.Player
+	enemies     []*enemy.Enemy
+	background1 *ebiten.Image
+	level       int
+	ticks       int
 }
 
 func (g *Game) Update() error {
 	g.ticks++
 	g.hero.Update(g.ticks)
+
+	if g.hero.GoingUp() {
+		for enemy := range g.enemies {
+			if g.hero.X < g.enemies[enemy].X-40 || g.hero.Y < g.enemies[enemy].Y+40 && g.hero.Y > g.enemies[enemy].Y-40 || g.hero.X > g.enemies[enemy].X-40 {
+				g.enemies[enemy].MarkDead(g.ticks)
+			}
+		}
+	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	img := g.background1
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(4.15, 4.15)
+	op.GeoM.Translate(-50, 0)
+	screen.DrawImage(img, op)
+
 	for enemy := range g.enemies {
 		g.enemies[enemy].BacteriaDraw(screen, g.ticks)
 	}
@@ -31,7 +46,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 600, 480
+	return 1920, 1080
 }
 
 func main() {
@@ -45,13 +60,19 @@ func main() {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
-	game := &Game{
-		hero:    player.New(heroImg),
-		enemies: enemy.NewEnemy(enemyImg, 1),
+	background1, _, err := ebitenutil.NewImageFromFile("assets/background.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
 	}
 
-	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("Bacteria Bubbles")
+	game := &Game{
+		hero:        player.New(heroImg),
+		enemies:     enemy.NewEnemy(enemyImg, 5),
+		background1: background1,
+	}
+
+	ebiten.SetWindowSize(1920, 1080)
+	ebiten.SetWindowTitle("Biofilm Blast")
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)

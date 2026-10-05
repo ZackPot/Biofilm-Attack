@@ -13,6 +13,7 @@ type Player struct {
 	XSpeed, YSpeed float64
 	AnimationSpeed int
 	HasMoved       bool
+	going_up       bool
 }
 
 func New(sprite *ebiten.Image) *Player {
@@ -22,18 +23,25 @@ func New(sprite *ebiten.Image) *Player {
 		Spritesheet:    sprite,
 		State:          1,
 		XSpeed:         2,
-		YSpeed:         1,
+		YSpeed:         1.5,
 		AnimationSpeed: 20,
 		HasMoved:       false,
+		going_up:       false,
 	}
+}
+
+func (p *Player) GoingUp() bool {
+	return p.going_up
 }
 
 func (p *Player) Update(ticks int) {
 	p.HasMoved = false
+	p.going_up = false
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		p.Y -= p.YSpeed
 		p.HasMoved = true
+		p.going_up = true
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		p.Y += p.YSpeed
 		p.HasMoved = true
@@ -49,22 +57,22 @@ func (p *Player) Update(ticks int) {
 
 	if p.X < 0 {
 		p.X = 0
-	} else if p.X > 600-64 {
-		p.X = 600 - 64
+	} else if p.X > 1920-64 {
+		p.X = 1920 - 64
 	}
 
 	if p.Y < 0 {
 		p.Y = 0
-	} else if p.Y > 480-64 {
-		p.Y = 480 - 64
+	} else if p.Y > 1080-64 {
+		p.Y = 1080 - 64
 	}
 
 	if p.HasMoved {
 		if ticks%p.AnimationSpeed == 0 {
-			if p.State == 1 {
-				p.State = 4
-			} else if p.State == 4 {
+			if p.State == 2 {
 				p.State = 1
+			} else {
+				p.State++
 			}
 		}
 	} else {
@@ -82,7 +90,7 @@ func (p *Player) HeroDraw(screen *ebiten.Image) {
 	currentFrameSprite := p.Spritesheet.SubImage(cropRect).(*ebiten.Image)
 
 	var op ebiten.DrawImageOptions
-	op.GeoM.Scale(2, 2)
+	op.GeoM.Scale(5, 5)
 	op.GeoM.Translate(p.X, p.Y)
 
 	screen.DrawImage(currentFrameSprite, &op)

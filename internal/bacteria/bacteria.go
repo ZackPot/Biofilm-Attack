@@ -17,13 +17,14 @@ type Enemy struct {
 	AnimationSpeed int
 	AnimOffset     float64
 	dead           bool
+	dead_ticks     int
 }
-
-var spacing int64 = 64
 
 func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 	enemies := make([]*Enemy, 0, quantity)
-	var spacing int16 = 64
+	var spacing int16 = 128
+
+	sp_width, sp_height := 1000, 600
 
 	chooser, err := weightedrand.NewChooser(
 		weightedrand.NewChoice(1, 35),
@@ -36,7 +37,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 	}
 
 	for i := 0; i < quantity; i++ {
-		x, y := float64(rand.Intn(600-64*1.5-64+1)+64), float64(rand.Intn(480-64*1.5-64+1)+64)
+		x, y := float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height))
 		is_touching := true
 
 		for is_touching {
@@ -45,9 +46,9 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			for _, enemy := range enemies {
 				if math.Abs(enemy.X-x) < float64(spacing) && math.Abs(enemy.Y-y) < float64(spacing) {
 					is_touching = true
-					x, y = float64(rand.Intn(600-64*1.5-64+1)+64), float64(rand.Intn(480-64*1.5-64+1)+64)
+					x, y = float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height))
 
-					if enemy.X-x < float64(spacing) && enemy.Y-y < float64(spacing) {
+					if math.Abs(enemy.X-x) < float64(spacing) && math.Abs(enemy.Y-y) < float64(spacing) {
 						continue
 					} else {
 						break
@@ -71,6 +72,11 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 	return enemies
 }
 
+func (e *Enemy) MarkDead(ticks int) {
+	e.dead = true
+	e.dead_ticks = ticks
+}
+
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 	var start_x int = 32*e.State - 32
 	var start_y int = 0
@@ -81,8 +87,8 @@ func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 	currentFrameSprite := e.Spritesheet.SubImage(cropRect).(*ebiten.Image)
 
 	var op ebiten.DrawImageOptions
-	jiggle := math.Round(math.Sin(float64(ticks)*0.3 + +e.AnimOffset))
-	op.GeoM.Scale(1.5, 1.5)
+	jiggle := math.Round(math.Sin(float64(ticks)*0.5 + +e.AnimOffset))
+	op.GeoM.Scale(3, 3)
 	op.GeoM.Translate(e.X, e.Y+jiggle)
 
 	screen.DrawImage(currentFrameSprite, &op)
