@@ -5,20 +5,27 @@ import (
 
 	enemy "biofilm-attack/internal/bacteria"
 	player "biofilm-attack/internal/player"
+	projectile "biofilm-attack/internal/projectile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Game struct {
-	hero        *player.Player
-	enemies     []*enemy.Enemy
-	background1 *ebiten.Image
-	level       int
-	ticks       int
+	hero               *player.Player
+	enemies            []*enemy.Enemy
+	background1        *ebiten.Image
+	level              int
+	ticks              int
+	projectiles        []*projectile.Projectile
+	current_projectile int
 }
 
 func (g *Game) Update() error {
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		g.projectiles = append(&g.projectiles, projectile.SpawnProjectile(g.hero.X, g.hero.Y, 0, 100))
+	}
+
 	g.ticks++
 	g.hero.Update(g.ticks)
 	return nil
