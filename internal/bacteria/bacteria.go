@@ -16,8 +16,6 @@ type Enemy struct {
 	XSpeed, YSpeed float64
 	AnimationSpeed int
 	AnimOffset     float64
-	dead           bool
-	dead_ticks     int
 }
 
 func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
@@ -66,15 +64,9 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			State:          chooser.Pick().(int),
 			X:              x,
 			Y:              y,
-			dead:           false,
 		})
 	}
 	return enemies
-}
-
-func (e *Enemy) MarkDead(ticks int) {
-	e.dead = true
-	e.dead_ticks = ticks
 }
 
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {

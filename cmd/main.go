@@ -21,14 +21,6 @@ type Game struct {
 func (g *Game) Update() error {
 	g.ticks++
 	g.hero.Update(g.ticks)
-
-	if g.hero.GoingUp() {
-		for enemy := range g.enemies {
-			if g.hero.X < g.enemies[enemy].X-40 || g.hero.Y < g.enemies[enemy].Y+40 && g.hero.Y > g.enemies[enemy].Y-40 || g.hero.X > g.enemies[enemy].X-40 {
-				g.enemies[enemy].MarkDead(g.ticks)
-			}
-		}
-	}
 	return nil
 }
 
