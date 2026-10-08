@@ -17,13 +17,14 @@ type Game struct {
 	background1        *ebiten.Image
 	level              int
 	ticks              int
+	projectile_img     ebiten.Image
 	projectiles        []*projectile.Projectile
 	current_projectile int
 }
 
 func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		g.projectiles = append(&g.projectiles, projectile.SpawnProjectile(g.hero.X, g.hero.Y, 0, 100))
+		g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X), int(g.hero.Y), 0, 1, 1, &g.projectile_img))
 	}
 
 	g.ticks++
@@ -64,11 +65,19 @@ func main() {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
-	game := &Game{
-		hero:        player.New(heroImg),
-		enemies:     enemy.NewEnemy(enemyImg, 5),
-		background1: background1,
+	projectile_example_img, _, err := ebitenutil.NewImageFromFile("assets/projectile_examplex.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
 	}
+
+	game := &Game{
+		hero:           player.New(heroImg),
+		enemies:        enemy.NewEnemy(enemyImg, 5),
+		background1:    background1,
+		projectile_img: *projectile_example_img,
+	}
+
+	game.projectiles = append(game.projectiles, projectile.SpawnProjectile(int(game.hero.X), int(game.hero.Y), 0, 1, 1, &game.projectile_img))
 
 	ebiten.SetWindowSize(1920, 1080)
 	ebiten.SetWindowTitle("Biofilm Blast")
