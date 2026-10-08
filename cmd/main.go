@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	enemy "biofilm-attack/internal/bacteria"
@@ -18,14 +19,22 @@ type Game struct {
 	ticks       int
 }
 
+const bounding_box = 32 * 5 / 2
+
 func (g *Game) Update() error {
 	g.ticks++
 	g.hero.Update(g.ticks)
 
 	if g.hero.GoingUp() {
 		for enemy := range g.enemies {
-			if g.hero.X < g.enemies[enemy].X-40 || g.hero.Y < g.enemies[enemy].Y+40 && g.hero.Y > g.enemies[enemy].Y-40 || g.hero.X > g.enemies[enemy].X-40 {
+			fmt.Println(enemy)
+			if g.hero.X+bounding_box > g.enemies[enemy].X &&
+				g.hero.X < g.enemies[enemy].X+bounding_box &&
+				g.hero.Y+bounding_box > g.enemies[enemy].Y &&
+				g.hero.Y < g.enemies[enemy].Y+bounding_box {
+
 				g.enemies[enemy].MarkDead(g.ticks)
+				fmt.Println("Collision")
 			}
 		}
 	}
