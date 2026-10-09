@@ -20,7 +20,7 @@ func SpawnProjectile(x, y, vel_x, vel_y, state int, spritesheet *ebiten.Image) *
 		x:     x,
 		y:     y,
 		vel_x: vel_x,
-		vel_y: y,
+		vel_y: vel_y,
 		state: state,
 		img:   spritesheet,
 	}
@@ -37,12 +37,13 @@ func (pr *Projectile) ProjectileDraw(screen *ebiten.Image) {
 	var end_x int = 32 * pr.state
 	var end_y int = 32
 
-	cropRect := image.Rect(start_x, start_y, end_x, end_y)
-	currentFrameSprite := pr.img.SubImage(cropRect).(*ebiten.Image)
+	crop := image.Rect(start_x, start_y, end_x, end_y)
+	subImg := pr.img.SubImage(crop)
+	crop_final := subImg.(*ebiten.Image)
 
 	var op ebiten.DrawImageOptions
 	op.GeoM.Scale(5, 5)
 	op.GeoM.Translate(float64(pr.x), float64(pr.y))
 
-	screen.DrawImage(currentFrameSprite, &op)
+	screen.DrawImage(crop_final, &op)
 }
