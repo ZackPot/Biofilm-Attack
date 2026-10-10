@@ -12,19 +12,51 @@ import (
 )
 
 type Game struct {
-	hero               *player.Player
-	enemies            []*enemy.Enemy
-	background1        *ebiten.Image
-	level              int
-	ticks              int
-	projectile_img     *ebiten.Image
-	projectiles        []*projectile.Projectile
-	current_projectile int
+	hero                *player.Player
+	enemies             []*enemy.Enemy
+	background1         *ebiten.Image
+	level               int
+	ticks               int
+	projectile_img      *ebiten.Image
+	projectiles         []*projectile.Projectile
+	current_projectile  int
+	projectile_velocity int
+	shooting_cooldown   int
 }
+
+var last_shot = 0
 
 func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X), int(g.hero.Y), 0, 1, 1, g.projectile_img))
+		if g.ticks-last_shot > g.shooting_cooldown {
+			last_shot = g.ticks
+
+			switch g.hero.Direction() {
+			case 1:
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
+					int(g.hero.Y),
+					0, -g.projectile_velocity, 1,
+					g.projectile_img))
+
+			case 2:
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
+					int(g.hero.Y),
+					0, g.projectile_velocity, 1,
+					g.projectile_img))
+
+			case 3:
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
+					int(g.hero.Y),
+					-g.projectile_velocity, 0, 1,
+					g.projectile_img))
+
+			case 4:
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
+					int(g.hero.Y),
+					g.projectile_velocity, 0, 1,
+					g.projectile_img))
+			}
+		}
 	}
 
 	for projectile := range g.projectiles {
@@ -79,10 +111,12 @@ func main() {
 	}
 
 	game := &Game{
-		hero:           player.New(heroImg),
-		enemies:        enemy.NewEnemy(enemyImg, 5),
-		background1:    background1,
-		projectile_img: projectile_example_img,
+		hero:                player.New(heroImg),
+		enemies:             enemy.NewEnemy(enemyImg, 5),
+		background1:         background1,
+		projectile_img:      projectile_example_img,
+		shooting_cooldown:   30,
+		projectile_velocity: 10,
 	}
 
 	ebiten.SetWindowSize(1920, 1080)

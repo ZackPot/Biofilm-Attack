@@ -13,7 +13,7 @@ type Player struct {
 	XSpeed, YSpeed float64
 	AnimationSpeed int
 	HasMoved       bool
-	going_up       bool
+	direction      int
 }
 
 func New(sprite *ebiten.Image) *Player {
@@ -26,33 +26,36 @@ func New(sprite *ebiten.Image) *Player {
 		YSpeed:         1.5,
 		AnimationSpeed: 20,
 		HasMoved:       false,
-		going_up:       false,
+		direction:      1,
 	}
 }
 
-func (p *Player) GoingUp() bool {
-	return p.going_up
+func (p *Player) Direction() int {
+	return p.direction
 }
 
 func (p *Player) Update(ticks int) {
 	p.HasMoved = false
-	p.going_up = false
+	p.direction = 1
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		p.Y -= p.YSpeed
 		p.HasMoved = true
-		p.going_up = true
+		p.direction = 1
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		p.Y += p.YSpeed
 		p.HasMoved = true
+		p.direction = 2
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 		p.X -= p.XSpeed
 		p.HasMoved = true
+		p.direction = 3
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 		p.X += p.XSpeed
 		p.HasMoved = true
+		p.direction = 4
 	}
 
 	if p.X < 0 {
