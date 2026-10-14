@@ -21,7 +21,7 @@ type Game struct {
 	projectiles         []*projectile.Projectile
 	current_projectile  int
 	projectile_velocity int
-	shooting_cooldown   int
+	shooting_cooldown   int // do you like my beautiful code formatting
 }
 
 var last_shot = 0
@@ -55,7 +55,7 @@ func (g *Game) Update() error {
 					int(g.hero.Y),
 					g.projectile_velocity, 0, 1,
 					g.projectile_img))
-			}
+			} // I don't like fancy logic
 		}
 	}
 
@@ -72,8 +72,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	img := g.background1
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(4.15, 4.15)
-	op.GeoM.Translate(-50, 0)
-	screen.DrawImage(img, op)
+	op.GeoM.Translate(-50, -150)
+	screen.DrawImage(img, op) // random image stuff
 
 	for projectile := range g.projectiles {
 		g.projectiles[projectile].ProjectileDraw(screen)
@@ -86,7 +86,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 1920, 1080
+	return 1542, 897
 }
 
 func main() {
@@ -113,13 +113,13 @@ func main() {
 	game := &Game{
 		hero:                player.New(heroImg),
 		enemies:             enemy.NewEnemy(enemyImg, 5),
-		background1:         background1,
+		background1:         background1, // background is 384 x 216
 		projectile_img:      projectile_example_img,
 		shooting_cooldown:   30,
 		projectile_velocity: 10,
 	}
 
-	ebiten.SetWindowSize(1920, 1080)
+	ebiten.SetWindowSize(1542, 897)
 	ebiten.SetWindowTitle("Biofilm Blast")
 
 	if err := ebiten.RunGame(game); err != nil {

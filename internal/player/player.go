@@ -18,8 +18,8 @@ type Player struct {
 
 func New(sprite *ebiten.Image) *Player {
 	return &Player{
-		X:              100,
-		Y:              100,
+		X:              650,
+		Y:              300,
 		Spritesheet:    sprite,
 		State:          1,
 		XSpeed:         2,
@@ -60,14 +60,14 @@ func (p *Player) Update(ticks int) {
 
 	if p.X < 0 {
 		p.X = 0
-	} else if p.X > 1920-64 {
-		p.X = 1920 - 64
+	} else if p.X > 1542-110 {
+		p.X = 1542 - 110
 	}
 
 	if p.Y < 0 {
 		p.Y = 0
-	} else if p.Y > 1080-64 {
-		p.Y = 1080 - 64
+	} else if p.Y > 897-305 {
+		p.Y = 897 - 305
 	}
 
 	if p.HasMoved {

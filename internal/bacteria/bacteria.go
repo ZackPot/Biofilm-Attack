@@ -35,7 +35,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 	}
 
 	for i := 0; i < quantity; i++ {
-		x, y := float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height))
+		x, y := float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height)-150)
 		is_touching := true
 
 		for is_touching {
@@ -44,7 +44,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			for _, enemy := range enemies {
 				if math.Abs(enemy.X-x) < float64(spacing) && math.Abs(enemy.Y-y) < float64(spacing) {
 					is_touching = true
-					x, y = float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height))
+					x, y = float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height)-150)
 
 					if math.Abs(enemy.X-x) < float64(spacing) && math.Abs(enemy.Y-y) < float64(spacing) {
 						continue
