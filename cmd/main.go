@@ -33,26 +33,26 @@ func (g *Game) Update() error {
 
 			switch g.hero.Direction() {
 			case 1:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
-					int(g.hero.Y),
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+					int(g.hero.Y()),
 					0, -g.projectile_velocity, 1,
 					g.projectile_img))
 
 			case 2:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
-					int(g.hero.Y),
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+					int(g.hero.Y()),
 					0, g.projectile_velocity, 1,
 					g.projectile_img))
 
 			case 3:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
-					int(g.hero.Y),
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+					int(g.hero.Y()),
 					-g.projectile_velocity, 0, 1,
 					g.projectile_img))
 
 			case 4:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X),
-					int(g.hero.Y),
+				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+					int(g.hero.Y()),
 					g.projectile_velocity, 0, 1,
 					g.projectile_img))
 			} // I don't like fancy logic
@@ -61,6 +61,14 @@ func (g *Game) Update() error {
 
 	for projectile := range g.projectiles {
 		g.projectiles[projectile].ProjectileUpdate()
+
+		for enemy := range g.enemies {
+			if g.enemies[enemy].Y()-64 < g.projectiles[projectile].Y() && g.projectiles[projectile].Y() < g.enemies[enemy].Y()+64 &&
+				g.enemies[enemy].X()-64 < g.projectiles[projectile].X() && g.projectiles[projectile].X() < g.enemies[enemy].X()+64 {
+
+				g.enemies[enemy].MarkDead()
+			}
+		}
 	}
 
 	g.ticks++

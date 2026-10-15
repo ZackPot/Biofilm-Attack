@@ -7,7 +7,7 @@ import (
 )
 
 type Player struct {
-	X, Y           float64
+	x, y           float64
 	State          int
 	Spritesheet    *ebiten.Image
 	XSpeed, YSpeed float64
@@ -18,8 +18,8 @@ type Player struct {
 
 func New(sprite *ebiten.Image) *Player {
 	return &Player{
-		X:              650,
-		Y:              300,
+		x:              650,
+		y:              300,
 		Spritesheet:    sprite,
 		State:          1,
 		XSpeed:         2,
@@ -34,40 +34,48 @@ func (p *Player) Direction() int {
 	return p.direction
 }
 
+func (p *Player) X() int {
+	return int(p.x)
+}
+
+func (p *Player) Y() int {
+	return int(p.y)
+}
+
 func (p *Player) Update(ticks int) {
 	p.HasMoved = false
 	p.direction = 1
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		p.Y -= p.YSpeed
+		p.y -= p.YSpeed
 		p.HasMoved = true
 		p.direction = 1
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		p.Y += p.YSpeed
+		p.y += p.YSpeed
 		p.HasMoved = true
 		p.direction = 2
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		p.X -= p.XSpeed
+		p.x -= p.XSpeed
 		p.HasMoved = true
 		p.direction = 3
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		p.X += p.XSpeed
+		p.x += p.XSpeed
 		p.HasMoved = true
 		p.direction = 4
 	}
 
-	if p.X < 0 {
-		p.X = 0
-	} else if p.X > 1542-110 {
-		p.X = 1542 - 110
+	if p.x < 0 {
+		p.x = 0
+	} else if p.x > 1542-110 {
+		p.x = 1542 - 110
 	}
 
-	if p.Y < 0 {
-		p.Y = 0
-	} else if p.Y > 897-305 {
-		p.Y = 897 - 305
+	if p.y < 0 {
+		p.y = 0
+	} else if p.y > 897-305 {
+		p.y = 897 - 305
 	}
 
 	if p.HasMoved {
@@ -94,7 +102,7 @@ func (p *Player) HeroDraw(screen *ebiten.Image) {
 
 	var op ebiten.DrawImageOptions
 	op.GeoM.Scale(5, 5)
-	op.GeoM.Translate(p.X, p.Y)
+	op.GeoM.Translate(p.x, p.y)
 
 	screen.DrawImage(currentFrameSprite, &op)
 }

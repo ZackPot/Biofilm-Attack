@@ -10,12 +10,13 @@ import (
 )
 
 type Enemy struct {
-	X, Y           float64
+	x, y           float64
 	State          int
 	Spritesheet    *ebiten.Image
 	XSpeed, YSpeed float64
 	AnimationSpeed int
 	AnimOffset     float64
+	dead           bool
 }
 
 func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
@@ -35,18 +36,18 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 	}
 
 	for i := 0; i < quantity; i++ {
-		x, y := float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height)-150)
+		bx, by := float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height))
 		is_touching := true
 
 		for is_touching {
 			is_touching = false
 
 			for _, enemy := range enemies {
-				if math.Abs(enemy.X-x) < float64(spacing) && math.Abs(enemy.Y-y) < float64(spacing) {
+				if math.Abs(enemy.x-bx) < float64(spacing) && math.Abs(enemy.y-by) < float64(spacing) {
 					is_touching = true
-					x, y = float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height)-150)
+					bx, by = float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height)-200)
 
-					if math.Abs(enemy.X-x) < float64(spacing) && math.Abs(enemy.Y-y) < float64(spacing) {
+					if math.Abs(enemy.x-bx) < float64(spacing) && math.Abs(enemy.y-by) < float64(spacing) {
 						continue
 					} else {
 						break
@@ -62,26 +63,41 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			AnimationSpeed: 5,
 			AnimOffset:     float64(i),
 			State:          chooser.Pick().(int),
-			X:              x,
-			Y:              y,
+			x:              bx,
+			y:              by,
+			dead:           false,
 		})
 	}
 	return enemies
 }
 
+func (e *Enemy) MarkDead() {
+	e.dead = true
+}
+
+func (e *Enemy) X() int {
+	return int(e.x)
+}
+
+func (e *Enemy) Y() int {
+	return int(e.y)
+}
+
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
-	var start_x int = 32*e.State - 32
-	var start_y int = 0
-	var end_x int = 32 * e.State
-	var end_y int = 32
+	if !e.dead {
+		var start_x int = 32*e.State - 32
+		var start_y int = 0
+		var end_x int = 32 * e.State
+		var end_y int = 32
 
-	cropRect := image.Rect(start_x, start_y, end_x, end_y)
-	currentFrameSprite := e.Spritesheet.SubImage(cropRect).(*ebiten.Image)
+		cropRect := image.Rect(start_x, start_y, end_x, end_y)
+		currentFrameSprite := e.Spritesheet.SubImage(cropRect).(*ebiten.Image)
 
-	var op ebiten.DrawImageOptions
-	jiggle := math.Round(math.Sin(float64(ticks)*0.5 + +e.AnimOffset))
-	op.GeoM.Scale(3, 3)
-	op.GeoM.Translate(e.X, e.Y+jiggle)
+		var op ebiten.DrawImageOptions
+		jiggle := math.Round(math.Sin(float64(ticks)*0.5 + +e.AnimOffset))
+		op.GeoM.Scale(3, 3)
+		op.GeoM.Translate(e.x, e.y+jiggle)
 
-	screen.DrawImage(currentFrameSprite, &op)
+		screen.DrawImage(currentFrameSprite, &op)
+	}
 }
