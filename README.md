@@ -12,4 +12,5 @@ A game that teaches the types of enzymes someone would find in a chronic wound t
 
 ## Demo
 
-<img width="1504" height="886" alt="image" src="https://github.com/user-attachments/assets/2c30e663-6b45-4fb1-a039-628cfdd985f3" />
+https://github.com/user-attachments/assets/e83b23a8-e383-41bd-b7b7-816eee0cb83c
+
