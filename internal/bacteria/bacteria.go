@@ -9,6 +9,10 @@ import (
 	"github.com/mroth/weightedrand"
 )
 
+func pick(a, b int) int {
+	return a + rand.Intn(b-a+1)
+} // credit to https://programming-idioms.org/idiom/15/pick-uniformly-a-random-integer-in-a-b/168/go
+
 type Enemy struct {
 	x, y           float64
 	State          int
@@ -22,8 +26,7 @@ type Enemy struct {
 func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 	enemies := make([]*Enemy, 0, quantity)
 	var spacing int16 = 128
-
-	sp_width, sp_height := 1000, 600
+	sp_width, sp_height := 600, 300
 
 	chooser, err := weightedrand.NewChooser(
 		weightedrand.NewChoice(1, 35),
@@ -35,8 +38,8 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 		panic(err)
 	}
 
-	for i := 0; i < quantity; i++ {
-		bx, by := float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height))
+	for i := 0; i < quantity; i++ { // screen size is 1542, 897
+		bx, by := float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
 		is_touching := true
 
 		for is_touching {
@@ -45,7 +48,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			for _, enemy := range enemies {
 				if math.Abs(enemy.x-bx) < float64(spacing) && math.Abs(enemy.y-by) < float64(spacing) {
 					is_touching = true
-					bx, by = float64(rand.Intn(sp_width)-(1920/2-sp_width)), float64(rand.Intn(sp_height)-(1080/2-sp_height)-200)
+					bx, by = float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
 
 					if math.Abs(enemy.x-bx) < float64(spacing) && math.Abs(enemy.y-by) < float64(spacing) {
 						continue

@@ -63,8 +63,8 @@ func (g *Game) Update() error {
 		g.projectiles[projectile].ProjectileUpdate()
 
 		for enemy := range g.enemies {
-			if g.enemies[enemy].Y()-64 < g.projectiles[projectile].Y() && g.projectiles[projectile].Y() < g.enemies[enemy].Y()+64 &&
-				g.enemies[enemy].X()-64 < g.projectiles[projectile].X() && g.projectiles[projectile].X() < g.enemies[enemy].X()+64 {
+			if g.enemies[enemy].Y()-100 < g.projectiles[projectile].Y() && g.projectiles[projectile].Y() < g.enemies[enemy].Y()+100 &&
+				g.enemies[enemy].X()-100 < g.projectiles[projectile].X() && g.projectiles[projectile].X() < g.enemies[enemy].X()+100 {
 
 				g.enemies[enemy].MarkDead()
 			}
