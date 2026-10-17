@@ -6,6 +6,7 @@ import (
 	enemy "biofilm-attack/internal/bacteria"
 	player "biofilm-attack/internal/player"
 	projectile "biofilm-attack/internal/projectile"
+	weaponselect "biofilm-attack/internal/weapon_select"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -22,6 +23,7 @@ type Game struct {
 	current_projectile  int
 	projectile_velocity int
 	shooting_cooldown   int // do you like my beautiful code formatting
+	sl_bar              weaponselect.Sl_bar
 }
 
 var last_shot = 0
@@ -91,6 +93,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.enemies[enemy].BacteriaDraw(screen, g.ticks)
 	}
 	g.hero.HeroDraw(screen)
+	g.sl_bar.SLDraw(screen, g.current_projectile)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -123,8 +126,10 @@ func main() {
 		enemies:             enemy.NewEnemy(enemyImg, 5),
 		background1:         background1, // background is 384 x 216
 		projectile_img:      projectile_example_img,
+		current_projectile:  1,
 		shooting_cooldown:   30,
 		projectile_velocity: 10,
+		sl_bar:              *weaponselect.New(projectile_example_img),
 	}
 
 	ebiten.SetWindowSize(1542, 897)
