@@ -18,8 +18,8 @@ type Player struct {
 
 func New(sprite *ebiten.Image) *Player {
 	return &Player{
-		x:              650,
-		y:              300,
+		x:              690,
+		y:              290,
 		Spritesheet:    sprite,
 		State:          1,
 		XSpeed:         2,

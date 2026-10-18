@@ -86,6 +86,16 @@ func (e *Enemy) Y() int {
 	return int(e.y)
 }
 
+func (e *Enemy) BacteriaUpdate(px, py float64) {
+	x_dist := e.x - px
+	y_dist := e.y - py
+
+	dist := math.Sqrt(x_dist*y_dist + y_dist*y_dist)
+
+	e.x = (x_dist / dist) * e.XSpeed
+	e.y = (y_dist / dist) * e.YSpeed
+}
+
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 	if !e.dead {
 		var start_x int = 32*e.State - 32
