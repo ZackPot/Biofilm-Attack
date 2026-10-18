@@ -86,14 +86,30 @@ func (e *Enemy) Y() int {
 	return int(e.y)
 }
 
-func (e *Enemy) BacteriaUpdate(px, py float64) {
-	x_dist := e.x - px
-	y_dist := e.y - py
+func get_travel(e1, e2, d1, d2, Xspeed, Yspeed float64) (float64, float64) {
+	x_dist := e1 - d1
+	y_dist := e2 - d2
 
-	dist := math.Sqrt(x_dist*y_dist + y_dist*y_dist)
+	dist := math.Sqrt(x_dist*x_dist + y_dist*y_dist)
 
-	e.x = (x_dist / dist) * e.XSpeed
-	e.y = (y_dist / dist) * e.YSpeed
+	x_travel := (x_dist / dist) * Xspeed
+	y_travel := (y_dist / dist) * Yspeed
+
+	return x_travel, y_travel
+}
+
+func (e *Enemy) BacteriaUpdate(px, py float64, enemies []*Enemy) {
+	xt, yt := get_travel(e.x, e.y, px, py, e.XSpeed, e.YSpeed)
+	e.x -= xt
+	e.y -= yt
+
+	for enemy := range enemies {
+		if e.x-150 < float64(enemies[enemy].X()) && float64(enemies[enemy].X()) < e.x+150 && e.y-150 < float64(enemies[enemy].Y()) && float64(enemies[enemy].Y()) < e.y+150 {
+			px, py := get_travel(e.x, e.y, float64(enemies[enemy].X()), float64(enemies[enemy].Y()), e.XSpeed, e.YSpeed)
+			e.x += px
+			e.y += py
+		}
+	}
 }
 
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
