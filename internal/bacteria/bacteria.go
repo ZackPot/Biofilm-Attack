@@ -2,10 +2,12 @@ package enemy
 
 import (
 	"image"
+	"image/color"
 	"math"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/mroth/weightedrand"
 )
 
@@ -21,6 +23,9 @@ type Enemy struct {
 	AnimationSpeed int
 	AnimOffset     float64
 	dead           bool
+	health         int
+	vel            float64
+	dir            float64
 }
 
 func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
@@ -69,13 +74,20 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			x:              bx,
 			y:              by,
 			dead:           false,
+			health:         100,
+			dir:            0,
+			vel:            10,
 		})
 	}
 	return enemies
 }
 
 func (e *Enemy) MarkDead() {
-	e.dead = true
+	e.health -= 100
+
+	if e.health == 0 {
+		e.dead = true
+	}
 }
 
 func (e *Enemy) X() int {
@@ -86,30 +98,69 @@ func (e *Enemy) Y() int {
 	return int(e.y)
 }
 
-func get_travel(e1, e2, d1, d2, Xspeed, Yspeed float64) (float64, float64) {
-	x_dist := e1 - d1
-	y_dist := e2 - d2
-
-	dist := math.Sqrt(x_dist*x_dist + y_dist*y_dist)
-
-	x_travel := (x_dist / dist) * Xspeed
-	y_travel := (y_dist / dist) * Yspeed
-
-	return x_travel, y_travel
+func (e *Enemy) DIR() float64 {
+	return e.dir
 }
 
-func (e *Enemy) BacteriaUpdate(px, py float64, enemies []*Enemy) {
-	xt, yt := get_travel(e.x, e.y, px, py, e.XSpeed, e.YSpeed)
-	e.x -= xt
-	e.y -= yt
+func get_travel(e1, e2, d1, d2 float64) float64 {
+	x_dist := e1 - d1
+	y_dist := e2 - d2
+	angle := math.Atan2(x_dist, y_dist)
+	return angle * 180 / math.Pi
+}
+
+func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
+	a := get_travel(e.x, e.y, px, py)
+	e.dir += a * 0.5
 
 	for enemy := range enemies {
-		if e.x-150 < float64(enemies[enemy].X()) && float64(enemies[enemy].X()) < e.x+150 && e.y-150 < float64(enemies[enemy].Y()) && float64(enemies[enemy].Y()) < e.y+150 {
-			px, py := get_travel(e.x, e.y, float64(enemies[enemy].X()), float64(enemies[enemy].Y()), e.XSpeed, e.YSpeed)
-			e.x += px
-			e.y += py
+		if e.x-200 < float64(enemies[enemy].X()) && float64(enemies[enemy].X()) < e.x+200 && e.y-200 < float64(enemies[enemy].Y()) && float64(enemies[enemy].Y()) < e.y+200 {
+			a := get_travel(e.x, e.y, float64(enemies[enemy].X()), float64(enemies[enemy].Y()))
+			e.dir += a * 0.3
 		}
 	}
+
+	count := 0
+	total := 0.0
+
+	for enemy := range enemies {
+		if enemies[enemy] == e {
+			continue
+		}
+
+		count++
+		total += enemies[enemy].DIR()
+	}
+
+	mean_dir := float64(total) / float64(count)
+	e.dir += 0.15 * mean_dir
+
+	count = 0
+	totalx := 0
+	totaly := 0
+
+	for enemy := range enemies {
+		if enemies[enemy] == e {
+			continue
+		}
+
+		count++
+		totalx += enemies[enemy].X()
+		totaly += enemies[enemy].Y()
+	}
+
+	mean_x := float64(totalx) / float64(count)
+	mean_y := float64(totaly) / float64(count)
+	a = get_travel(e.x, e.y, float64(mean_x), float64(mean_y))
+	e.dir += a * 0.15
+
+	e.x += e.vel * math.Cos(e.dir*math.Pi/180)
+	e.y += e.vel * math.Sin(e.dir*math.Pi/180)
+}
+
+func (e *Enemy) DrawHealth(screen *ebiten.Image) {
+	vector.FillRect(screen, float32(e.x-30), float32(e.y+60), float32(e.x+30), float32(e.y+70), color.RGBA{R: 255, G: 255, B: 255, A: 255}, false)
+	vector.FillRect(screen, float32(e.x-40), float32(e.y+50), float32(e.x+40), float32(e.y+80), color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
 }
 
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {

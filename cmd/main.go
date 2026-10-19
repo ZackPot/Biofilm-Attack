@@ -70,7 +70,7 @@ func (g *Game) Update() error {
 	}
 
 	for enemy := range g.enemies {
-		g.enemies[enemy].BacteriaUpdate(float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
+		g.enemies[enemy].BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
 	}
 
 	for projectile := range g.projectiles {
