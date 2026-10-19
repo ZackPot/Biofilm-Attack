@@ -37,28 +37,36 @@ func (g *Game) Update() error {
 			case 1:
 				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
 					int(g.hero.Y()),
-					0, -g.projectile_velocity, 1,
+					0, -g.projectile_velocity, g.current_projectile,
 					g.projectile_img))
 
 			case 2:
 				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
 					int(g.hero.Y()),
-					0, g.projectile_velocity, 1,
+					0, g.projectile_velocity, g.current_projectile,
 					g.projectile_img))
 
 			case 3:
 				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
 					int(g.hero.Y()),
-					-g.projectile_velocity, 0, 1,
+					-g.projectile_velocity, 0, g.current_projectile,
 					g.projectile_img))
 
 			case 4:
 				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
 					int(g.hero.Y()),
-					g.projectile_velocity, 0, 1,
+					g.projectile_velocity, 0, g.current_projectile,
 					g.projectile_img))
 			} // I don't like fancy logic
 		}
+	} else if ebiten.IsKeyPressed(ebiten.Key1) {
+		g.current_projectile = 1
+	} else if ebiten.IsKeyPressed(ebiten.Key2) {
+		g.current_projectile = 2
+	} else if ebiten.IsKeyPressed(ebiten.Key3) {
+		g.current_projectile = 3
+	} else if ebiten.IsKeyPressed(ebiten.Key4) {
+		g.current_projectile = 4
 	}
 
 	for enemy := range g.enemies {
@@ -125,6 +133,11 @@ func main() {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
+	slbar_background, _, err := ebitenutil.NewImageFromFile("assets/sl_background.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
+	}
+
 	game := &Game{
 		hero:                player.New(heroImg),
 		enemies:             enemy.NewEnemy(enemyImg, 5),
@@ -133,7 +146,7 @@ func main() {
 		current_projectile:  1,
 		shooting_cooldown:   30,
 		projectile_velocity: 10,
-		sl_bar:              *weaponselect.New(projectile_example_img),
+		sl_bar:              *weaponselect.New(projectile_example_img, slbar_background),
 	}
 
 	ebiten.SetWindowSize(1542, 897)

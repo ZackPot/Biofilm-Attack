@@ -120,13 +120,13 @@ func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 		var end_y int = 32
 
 		cropRect := image.Rect(start_x, start_y, end_x, end_y)
-		currentFrameSprite := e.Spritesheet.SubImage(cropRect).(*ebiten.Image)
+		cropped := e.Spritesheet.SubImage(cropRect).(*ebiten.Image)
 
 		var op ebiten.DrawImageOptions
 		jiggle := math.Round(math.Sin(float64(ticks)*0.5 + +e.AnimOffset))
 		op.GeoM.Scale(3, 3)
 		op.GeoM.Translate(e.x, e.y+jiggle)
 
-		screen.DrawImage(currentFrameSprite, &op)
+		screen.DrawImage(cropped, &op)
 	}
 }

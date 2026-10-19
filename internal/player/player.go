@@ -98,11 +98,11 @@ func (p *Player) HeroDraw(screen *ebiten.Image) {
 	var end_y int = 32
 
 	cropRect := image.Rect(start_x, start_y, end_x, end_y)
-	currentFrameSprite := p.Spritesheet.SubImage(cropRect).(*ebiten.Image)
+	cropped := p.Spritesheet.SubImage(cropRect).(*ebiten.Image)
 
 	var op ebiten.DrawImageOptions
 	op.GeoM.Scale(5, 5)
 	op.GeoM.Translate(p.x, p.y)
 
-	screen.DrawImage(currentFrameSprite, &op)
+	screen.DrawImage(cropped, &op)
 }
