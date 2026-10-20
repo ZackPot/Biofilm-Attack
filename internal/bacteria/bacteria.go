@@ -79,7 +79,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			health:         100,
 			dir:            0,
 			vel:            1,
-			last_shot:      100,
+			last_shot:      0,
 		})
 	}
 	return enemies
@@ -89,8 +89,13 @@ func (e *Enemy) CH(amount int) {
 	e.health -= amount
 }
 
-func (e *Enemy) Hit(ticks int) {
-	e.last_shot = ticks
+var damage int
+
+func (e *Enemy) Hit(ticks, damag int) {
+	if ticks-e.last_shot > 60 {
+		e.last_shot = ticks
+	}
+	damage = damag
 }
 
 func (e *Enemy) X() int {
@@ -123,8 +128,8 @@ func nangle(angle float64) float64 {
 
 func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 	if ticks > 100 {
-		if ticks-e.last_shot == 0 || ticks-e.last_shot-60 == 0 {
-			e.health -= 20
+		if ticks-e.last_shot == 1 {
+			e.health -= damage
 		}
 	}
 

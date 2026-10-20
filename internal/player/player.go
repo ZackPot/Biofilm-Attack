@@ -32,7 +32,7 @@ func New(sprite *ebiten.Image) *Player {
 		HasMoved:       false,
 		direction:      1,
 		health:         100,
-		last_shot:      100,
+		last_shot:      0,
 	}
 }
 
@@ -44,8 +44,13 @@ func (p *Player) X() int {
 	return int(p.x)
 }
 
-func (p *Player) Hit(ticks int) {
-	p.last_shot = ticks
+var damage int
+
+func (p *Player) Hit(ticks, damag int) {
+	if ticks-p.last_shot > 60 {
+		p.last_shot = ticks
+	}
+	damage = damag
 }
 
 func (p *Player) Y() int {
@@ -58,8 +63,8 @@ func (p *Player) CH(factor int) {
 
 func (p *Player) Update(ticks int) {
 	if ticks > 100 {
-		if ticks-p.last_shot == 0 || ticks-p.last_shot-60 == 0 {
-			p.health -= 20
+		if ticks-p.last_shot == 1 {
+			p.health -= damage
 		}
 	}
 

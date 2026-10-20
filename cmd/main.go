@@ -31,14 +31,6 @@ var last_shot = 0
 var dist float64
 
 func (g *Game) Update() error {
-	// ---------------- THE ART OF THE BODGE ----------------------
-	if g.ticks == 160 {
-		for _, enemy := range g.enemies {
-			enemy.CH(-20)
-		}
-		g.hero.CH(-20)
-	}
-
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		if g.ticks-last_shot > g.shooting_cooldown {
 			last_shot = g.ticks
@@ -84,10 +76,10 @@ func (g *Game) Update() error {
 
 		dist = math.Sqrt(float64(enemy.X()-g.hero.X())*float64(enemy.X()-g.hero.X()) +
 			float64(enemy.Y()-g.hero.Y())*float64(enemy.Y()-g.hero.Y()))
-	}
 
-	if dist < 80 {
-		g.hero.Hit(g.ticks)
+		if dist < 90 {
+			g.hero.Hit(g.ticks, 20)
+		}
 	}
 
 	for _, projectile := range g.projectiles {
@@ -97,8 +89,8 @@ func (g *Game) Update() error {
 			dist = math.Sqrt(float64(enemy.X()-projectile.X())*float64(enemy.X()-projectile.X()) +
 				float64(enemy.Y()-projectile.Y())*float64(enemy.Y()-projectile.Y()))
 
-			if dist < 48 {
-				enemy.Hit(g.ticks)
+			if dist < 70 {
+				enemy.Hit(g.ticks, 50)
 			}
 		}
 	}
