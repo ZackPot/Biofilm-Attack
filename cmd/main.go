@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math"
 
 	enemy "biofilm-attack/internal/bacteria"
 	player "biofilm-attack/internal/player"
@@ -27,6 +28,7 @@ type Game struct {
 }
 
 var last_shot = 0
+var dist float64
 
 func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
@@ -69,18 +71,26 @@ func (g *Game) Update() error {
 		g.current_projectile = 4
 	}
 
-	for enemy := range g.enemies {
-		g.enemies[enemy].BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
+	for _, enemy := range g.enemies {
+		enemy.BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
+
+		dist = math.Sqrt(float64(enemy.X()-g.hero.X())*float64(enemy.X()-g.hero.X()) +
+			float64(enemy.Y()-g.hero.Y())*float64(enemy.Y()-g.hero.Y()))
 	}
 
-	for projectile := range g.projectiles {
-		g.projectiles[projectile].ProjectileUpdate()
+	if dist < 80 {
+		g.hero.Hit(g.ticks)
+	}
 
-		for enemy := range g.enemies {
-			if g.enemies[enemy].Y()-100 < g.projectiles[projectile].Y() && g.projectiles[projectile].Y() < g.enemies[enemy].Y()+100 &&
-				g.enemies[enemy].X()-100 < g.projectiles[projectile].X() && g.projectiles[projectile].X() < g.enemies[enemy].X()+100 {
+	for _, projectile := range g.projectiles {
+		projectile.ProjectileUpdate()
 
-				g.enemies[enemy].MarkDead()
+		for _, enemy := range g.enemies {
+			dist = math.Sqrt(float64(enemy.X()-projectile.X())*float64(enemy.X()-projectile.X()) +
+				float64(enemy.Y()-projectile.Y())*float64(enemy.Y()-projectile.Y()))
+
+			if dist < 48 {
+				enemy.Hit(g.ticks)
 			}
 		}
 	}

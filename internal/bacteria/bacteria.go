@@ -26,6 +26,7 @@ type Enemy struct {
 	health         int
 	vel            float64
 	dir            float64
+	last_shot      int
 }
 
 func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
@@ -78,17 +79,18 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			health:         100,
 			dir:            0,
 			vel:            1,
+			last_shot:      100,
 		})
 	}
 	return enemies
 }
 
-func (e *Enemy) MarkDead() {
-	e.health -= 100
+func (e *Enemy) CH(amount int) {
+	e.health -= amount
+}
 
-	if e.health == 0 {
-		e.dead = true
-	}
+func (e *Enemy) Hit(ticks int) {
+	e.last_shot = ticks
 }
 
 func (e *Enemy) X() int {
@@ -120,6 +122,12 @@ func nangle(angle float64) float64 {
 }
 
 func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
+	if ticks > 100 {
+		if ticks-e.last_shot == 0 || ticks-e.last_shot-60 == 0 {
+			e.health -= 20
+		}
+	}
+
 	a_player := get_travel(e.x, e.y, px, py)
 	a_player = nangle(a_player)
 	e.dir += nangle(a_player-e.dir) * 0.7
@@ -184,13 +192,19 @@ func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 	e.y += e.vel * math.Sin(e.dir*math.Pi/180)
 }
 
-func (e *Enemy) DrawHealth(screen *ebiten.Image) {
-	vector.FillRect(screen, float32(e.x-30), float32(e.y+60), float32(e.x+30), float32(e.y+70), color.RGBA{R: 255, G: 255, B: 255, A: 255}, false)
-	vector.FillRect(screen, float32(e.x-40), float32(e.y+50), float32(e.x+40), float32(e.y+80), color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
+const width = 60
+const height = 10
+const offset = 20
+const width_adjust = 48
+const thickness = 3
+
+func (e *Enemy) DrawHealth(screen *ebiten.Image, health int) {
+	vector.FillRect(screen, float32(e.x-width/2)+width_adjust, float32(e.y-offset), float32(width), float32(height), color.RGBA{R: 255, G: 255, B: 255, A: 255}, false)
+	vector.FillRect(screen, float32(e.x-width/2+thickness)+width_adjust, float32(e.y-offset+thickness), float32(width-thickness*2)*(float32(e.health)/100.0), float32(height-thickness*2), color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
 }
 
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
-	if !e.dead {
+	if e.health > 0 {
 		var start_x int = 32*e.State - 32
 		var start_y int = 0
 		var end_x int = 32 * e.State
@@ -205,5 +219,6 @@ func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 		op.GeoM.Translate(e.x, e.y+jiggle)
 
 		screen.DrawImage(cropped, &op)
+		e.DrawHealth(screen, e.health)
 	}
 }
