@@ -31,6 +31,14 @@ var last_shot = 0
 var dist float64
 
 func (g *Game) Update() error {
+	// ---------------- THE ART OF THE BODGE ----------------------
+	if g.ticks == 160 {
+		for _, enemy := range g.enemies {
+			enemy.CH(-20)
+		}
+		g.hero.CH(-20)
+	}
+
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		if g.ticks-last_shot > g.shooting_cooldown {
 			last_shot = g.ticks
