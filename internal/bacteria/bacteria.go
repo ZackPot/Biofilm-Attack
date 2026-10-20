@@ -187,14 +187,24 @@ func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 	a_cohesion = nangle(a_cohesion)
 	e.dir += nangle(a_cohesion-e.dir) * 0.01
 
-	if e.dir > 180 {
-		e.dir -= 360
-	} else if e.dir < -180 {
-		e.dir += 360
-	}
-
 	e.x += e.vel * math.Cos(e.dir*math.Pi/180)
 	e.y += e.vel * math.Sin(e.dir*math.Pi/180)
+
+	if e.y < 0-48 {
+		e.y = 0
+		e.dir = -e.dir
+	} else if e.y > 746-96 {
+		e.y = 746 - 96
+		e.dir = -e.dir
+	}
+
+	if e.x < 0-48 {
+		e.x = 0
+		e.dir = 180 - e.dir
+	} else if e.x > 1542-96 {
+		e.x = 1542 - 96
+		e.dir = 180 - e.dir
+	}
 }
 
 const width = 60
