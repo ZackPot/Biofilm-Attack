@@ -43,7 +43,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 		panic(err)
 	}
 
-	for i := 0; i < quantity; i++ { // screen size is 1542, 897
+	for i := range quantity { // screen size is 1542, 897
 		bx, by := float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
 		is_touching := true
 
@@ -58,7 +58,8 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 					if math.Abs(enemy.x-bx) < float64(spacing) && math.Abs(enemy.y-by) < float64(spacing) {
 						continue
 					} else {
-						break
+						bx, by = float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
+						is_touching = false
 					}
 				}
 			}
@@ -76,7 +77,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			dead:           false,
 			health:         100,
 			dir:            0,
-			vel:            10,
+			vel:            1,
 		})
 	}
 	return enemies
@@ -103,56 +104,81 @@ func (e *Enemy) DIR() float64 {
 }
 
 func get_travel(e1, e2, d1, d2 float64) float64 {
-	x_dist := e1 - d1
-	y_dist := e2 - d2
-	angle := math.Atan2(x_dist, y_dist)
-	return angle * 180 / math.Pi
+	x_dist := d1 - e1
+	y_dist := d2 - e2
+	return math.Atan2(y_dist, x_dist) * 180 / math.Pi
+}
+
+func nangle(angle float64) float64 {
+	if angle > 180 {
+		angle -= 360
+	} else if angle < -180 {
+		angle += 360
+	}
+
+	return angle
 }
 
 func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
-	a := get_travel(e.x, e.y, px, py)
-	e.dir += a * 0.5
+	a_player := get_travel(e.x, e.y, px, py)
+	a_player = nangle(a_player)
+	e.dir += nangle(a_player-e.dir) * 0.7
 
-	for enemy := range enemies {
-		if e.x-200 < float64(enemies[enemy].X()) && float64(enemies[enemy].X()) < e.x+200 && e.y-200 < float64(enemies[enemy].Y()) && float64(enemies[enemy].Y()) < e.y+200 {
-			a := get_travel(e.x, e.y, float64(enemies[enemy].X()), float64(enemies[enemy].Y()))
-			e.dir += a * 0.3
+	for _, enemy := range enemies {
+		if float64(enemy.X()) == e.x && float64(enemy.Y()) == e.y {
+			continue
+		} else {
+			dist := math.Sqrt(math.Pow(float64(enemy.X())-e.x, 2) + math.Pow(float64(enemy.Y())-e.y, 2))
+			if dist < 200 {
+				a_separation := get_travel(e.x, e.y, float64(enemy.X()), float64(enemy.Y()))
+				a_separation = nangle(a_separation)
+				e.dir += nangle(a_separation-e.dir+180) * 0.25
+			}
 		}
 	}
 
 	count := 0
 	total := 0.0
 
-	for enemy := range enemies {
-		if enemies[enemy] == e {
+	for _, enemy := range enemies {
+		if float64(enemy.X()) == e.x && float64(enemy.Y()) == e.y {
 			continue
 		}
 
 		count++
-		total += enemies[enemy].DIR()
+		total += enemy.DIR()
 	}
 
 	mean_dir := float64(total) / float64(count)
-	e.dir += 0.15 * mean_dir
+	mean_dir = nangle(mean_dir)
+	e.dir += nangle(mean_dir-e.dir) * 0.04
 
 	count = 0
 	totalx := 0
 	totaly := 0
 
-	for enemy := range enemies {
-		if enemies[enemy] == e {
+	for _, enemy := range enemies {
+		if float64(enemy.X()) == e.x && float64(enemy.Y()) == e.y {
 			continue
 		}
 
 		count++
-		totalx += enemies[enemy].X()
-		totaly += enemies[enemy].Y()
+		totalx += enemy.X()
+		totaly += enemy.Y()
 	}
 
 	mean_x := float64(totalx) / float64(count)
 	mean_y := float64(totaly) / float64(count)
-	a = get_travel(e.x, e.y, float64(mean_x), float64(mean_y))
-	e.dir += a * 0.15
+
+	a_cohesion := get_travel(e.x, e.y, float64(mean_x), float64(mean_y))
+	a_cohesion = nangle(a_cohesion)
+	e.dir += nangle(a_cohesion-e.dir) * 0.01
+
+	if e.dir > 180 {
+		e.dir -= 360
+	} else if e.dir < -180 {
+		e.dir += 360
+	}
 
 	e.x += e.vel * math.Cos(e.dir*math.Pi/180)
 	e.y += e.vel * math.Sin(e.dir*math.Pi/180)
