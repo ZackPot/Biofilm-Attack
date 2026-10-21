@@ -27,8 +27,8 @@ func (s *Sl_bar) SLDraw(screen *ebiten.Image, current_selected int) {
 	for state := range states {
 		if state+1 == current_selected {
 			var op ebiten.DrawImageOptions
-			op.GeoM.Scale(float64(projectile_width/32), float64(projectile_width/32))
-			op.GeoM.Translate(float64(((1542-total_length)/2)+state*projectile_width+state*spacing), 897-162)
+			op.GeoM.Scale(4, 4)
+			op.GeoM.Translate(float64(((1542-total_length)/2)+state*projectile_width+state*spacing+25)-float64(3*state), 897-162+20)
 
 			screen.DrawImage(s.background, &op)
 		}

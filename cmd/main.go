@@ -39,9 +39,12 @@ type Game struct {
 	energy_ball_img     *ebiten.Image
 	energy_balls        []EnergyBall
 	last_shot           int
+	enemy_img           *ebiten.Image
+	home_screen         *ebiten.Image
+	end_screen          *ebiten.Image
+	lose_screen         *ebiten.Image
+	lvl2_bkg            *ebiten.Image
 }
-
-var dist float64
 
 func (g *Game) FireShot() {
 	if g.ticks-g.last_shot > g.shooting_cooldown {
@@ -75,181 +78,371 @@ func (g *Game) FireShot() {
 	}
 }
 
+var lvl_2_init = false
+
 func (g *Game) Update() error {
-	if g.hero.Health > 0 {
-		if ebiten.IsKeyPressed(ebiten.KeySpace) {
-			switch g.current_projectile {
-			case 1:
-				g.shooting_cooldown = 60
-				g.FireShot()
-			case 2:
-				g.shooting_cooldown = 180
-				g.FireShot()
-			case 3:
-				g.shooting_cooldown = 30
-				g.FireShot()
-			case 4:
-				g.shooting_cooldown = 120
-				g.FireShot()
-			}
-		} else if ebiten.IsKeyPressed(ebiten.Key1) {
-			g.current_projectile = 1
-		} else if ebiten.IsKeyPressed(ebiten.Key2) {
-			g.current_projectile = 2
-		} else if ebiten.IsKeyPressed(ebiten.Key3) {
-			g.current_projectile = 3
-		} else if ebiten.IsKeyPressed(ebiten.Key4) {
-			g.current_projectile = 4
+	if g.level == 0 {
+		if ebiten.IsKeyPressed(ebiten.KeyEnter) {
+			g.level++
 		}
-	}
-
-	for _, enemy := range g.enemies {
-		if enemy.Health > 0 {
-			enemy.BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
-			x_dist := float64(enemy.X() - g.hero.X())
-			y_dist := float64(enemy.Y() - g.hero.Y())
-
-			dist = math.Sqrt(x_dist*x_dist + y_dist*y_dist)
-
-			if dist < 75 {
-				g.hero.Hit(g.ticks, 20)
+	} else if g.level == 1 {
+		if g.hero.Health > 0 {
+			if ebiten.IsKeyPressed(ebiten.KeySpace) {
+				switch g.current_projectile {
+				case 1:
+					g.shooting_cooldown = 60
+					g.FireShot()
+				case 2:
+					g.shooting_cooldown = 180
+					g.FireShot()
+				case 3:
+					g.shooting_cooldown = 15
+					g.FireShot()
+				case 4:
+					g.shooting_cooldown = 300
+					g.FireShot()
+				}
+			} else if ebiten.IsKeyPressed(ebiten.Key1) {
+				g.current_projectile = 1
+			} else if ebiten.IsKeyPressed(ebiten.Key2) {
+				g.current_projectile = 2
+			} else if ebiten.IsKeyPressed(ebiten.Key3) {
+				g.current_projectile = 3
+			} else if ebiten.IsKeyPressed(ebiten.Key4) {
+				g.current_projectile = 4
 			}
-		} else {
-			continue
 		}
-	}
-
-	for _, cprojectile := range g.projectiles {
-		cprojectile.ProjectileUpdate()
 
 		for _, enemy := range g.enemies {
-			dist = math.Sqrt(float64(enemy.X()-cprojectile.X())*float64(enemy.X()-cprojectile.X()) +
-				float64(enemy.Y()-cprojectile.Y())*float64(enemy.Y()-cprojectile.Y()))
+			if enemy.Health > 0 {
+				enemy.BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
+				x_dist := float64(enemy.X() - g.hero.X())
+				y_dist := float64(enemy.Y() - g.hero.Y())
 
-			if dist < 70 {
-				switch cprojectile.State {
+				dist := math.Sqrt(x_dist*x_dist + y_dist*y_dist)
+
+				if dist < 75 {
+					g.hero.Hit(g.ticks, 20)
+				}
+			} else {
+				continue
+			}
+		}
+
+		for _, cprojectile := range g.projectiles {
+			cprojectile.ProjectileUpdate()
+
+			for _, enemy := range g.enemies {
+				dist := math.Sqrt(float64(enemy.X()-cprojectile.X())*float64(enemy.X()-cprojectile.X()) +
+					float64(enemy.Y()-cprojectile.Y())*float64(enemy.Y()-cprojectile.Y()))
+
+				if dist < 70 {
+					switch cprojectile.State {
+					case 1:
+						enemy.Hit(g.ticks, 50, false)
+					case 2:
+						enemy.Hit(g.ticks, 100, false)
+					case 3:
+						enemy.Hit(g.ticks, 25, true)
+					case 4:
+						cprojectile.MarkDead()
+						enemy.Hit(g.ticks, 50, false)
+
+						for _, penemy := range g.enemies {
+							x_dist := float64(cprojectile.X() - penemy.X())
+							y_dist := float64(cprojectile.Y() - penemy.Y())
+							e_dist := math.Sqrt(x_dist*x_dist + y_dist*y_dist)
+
+							if e_dist < 300 {
+								penemy.Hit(g.ticks, 25, false)
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if g.ticks%420 == 0 {
+			sp_width, sp_height := 600, 300
+			bx, by := float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
+
+			g.energy_balls = append(g.energy_balls, EnergyBall{bx, by, false})
+		}
+
+		for ball_i := len(g.energy_balls) - 1; ball_i >= 0; ball_i-- {
+			dist := math.Sqrt((float64(g.hero.X())-g.energy_balls[ball_i].X)*(float64(g.hero.X())-g.energy_balls[ball_i].X) +
+				(float64(g.hero.Y())-g.energy_balls[ball_i].Y)*(float64(g.hero.Y())-g.energy_balls[ball_i].Y))
+
+			if dist < 80 {
+				if g.energy_balls[ball_i].Dead != true {
+					g.energy_balls[ball_i].Dead = true
+					g.hero.CH(-20)
+
+					if g.hero.Health > 100 {
+						g.hero.CH(g.hero.Health - 100)
+					}
+				}
+			}
+		}
+
+		ab := g.energy_balls[:0]
+		for _, ball := range g.energy_balls {
+			if !ball.Dead {
+				ab = append(ab, ball)
+			}
+		}
+		g.energy_balls = ab
+
+		ap := g.projectiles[:0]
+		for _, projectile := range g.projectiles {
+			if !projectile.Dead {
+				ap = append(ap, projectile)
+			}
+		}
+		g.projectiles = ap
+
+		deadc := 0
+		count := 0
+		for _, enemy := range g.enemies {
+			count++
+			if enemy.Health <= 0 {
+				deadc++
+			}
+		}
+
+		if deadc/count == 1 {
+			g.level++
+		}
+
+		if g.hero.Health <= 0 {
+			g.level = 4
+		}
+
+		g.ticks++
+		g.hero.Update(g.ticks)
+	} else if g.level == 2 {
+		if lvl_2_init == false {
+			g.energy_balls = g.energy_balls[:0]
+			g.enemies = enemy.NewEnemy(g.enemy_img, 10, true)
+		}
+
+		lvl_2_init = true
+
+		if g.hero.Health > 0 {
+			if ebiten.IsKeyPressed(ebiten.KeySpace) {
+				switch g.current_projectile {
 				case 1:
-					enemy.Hit(g.ticks, 50, false)
+					g.shooting_cooldown = 60
+					g.FireShot()
 				case 2:
-					enemy.Hit(g.ticks, 100, false)
+					g.shooting_cooldown = 180
+					g.FireShot()
 				case 3:
-					enemy.Hit(g.ticks, 25, true)
+					g.shooting_cooldown = 15
+					g.FireShot()
 				case 4:
-					cprojectile.MarkDead()
-					enemy.Hit(g.ticks, 50, false)
-					p1 := pick(1, 4)
-					p2 := pick(1, 4)
+					g.shooting_cooldown = 300
+					g.FireShot()
+				}
+			} else if ebiten.IsKeyPressed(ebiten.Key1) {
+				g.current_projectile = 1
+			} else if ebiten.IsKeyPressed(ebiten.Key2) {
+				g.current_projectile = 2
+			} else if ebiten.IsKeyPressed(ebiten.Key3) {
+				g.current_projectile = 3
+			} else if ebiten.IsKeyPressed(ebiten.Key4) {
+				g.current_projectile = 4
+			}
+		}
 
-					for p1 == p2 {
-						p2 = pick(1, 4)
-					}
+		for _, enemy := range g.enemies {
+			if enemy.Health > 0 {
+				enemy.BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
+				x_dist := float64(enemy.X() - g.hero.X())
+				y_dist := float64(enemy.Y() - g.hero.Y())
 
-					switch p1 {
+				dist := math.Sqrt(x_dist*x_dist + y_dist*y_dist)
+
+				if dist < 75 {
+					g.hero.Hit(g.ticks, 20)
+				}
+			} else {
+				continue
+			}
+		}
+
+		for _, cprojectile := range g.projectiles {
+			cprojectile.ProjectileUpdate()
+
+			for _, enemy := range g.enemies {
+				dist := math.Sqrt(float64(enemy.X()-cprojectile.X())*float64(enemy.X()-cprojectile.X()) +
+					float64(enemy.Y()-cprojectile.Y())*float64(enemy.Y()-cprojectile.Y()))
+
+				if dist < 70 {
+					switch cprojectile.State {
 					case 1:
-						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), -g.projectile_velocity, 0, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp1)
+						enemy.Hit(g.ticks, 25, false)
 					case 2:
-						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), g.projectile_velocity, 0, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp1)
+						enemy.Hit(g.ticks, 50, false)
 					case 3:
-						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, g.projectile_velocity, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp1)
+						enemy.Hit(g.ticks, 12, true)
 					case 4:
-						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, -g.projectile_velocity, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp1)
-					}
+						cprojectile.MarkDead()
+						enemy.Hit(g.ticks, 50, false)
 
-					switch p2 {
-					case 1:
-						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), -g.projectile_velocity, 0, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp2)
-					case 2:
-						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), g.projectile_velocity, 0, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp2)
-					case 3:
-						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, g.projectile_velocity, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp2)
-					case 4:
-						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, -g.projectile_velocity, 1, g.projectile_img, true)
-						g.projectiles = append(g.projectiles, pp2)
+						for _, penemy := range g.enemies {
+							x_dist := float64(cprojectile.X() - penemy.X())
+							y_dist := float64(cprojectile.Y() - penemy.Y())
+							e_dist := math.Sqrt(x_dist*x_dist + y_dist*y_dist)
+
+							if e_dist < 300 {
+								penemy.Hit(g.ticks, 25, false)
+							}
+						}
 					}
 				}
 			}
 		}
-	}
 
-	if g.ticks%420 == 0 {
-		sp_width, sp_height := 600, 300
-		bx, by := float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
+		if g.ticks%420 == 0 {
+			sp_width, sp_height := 600, 300
+			bx, by := float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
 
-		g.energy_balls = append(g.energy_balls, EnergyBall{bx, by, false})
-	}
+			g.energy_balls = append(g.energy_balls, EnergyBall{bx, by, false})
+		}
 
-	for ball_i := len(g.energy_balls) - 1; ball_i >= 0; ball_i-- {
-		dist := math.Sqrt((float64(g.hero.X())-g.energy_balls[ball_i].X)*(float64(g.hero.X())-g.energy_balls[ball_i].X) +
-			(float64(g.hero.Y())-g.energy_balls[ball_i].Y)*(float64(g.hero.Y())-g.energy_balls[ball_i].Y))
+		for ball_i := len(g.energy_balls) - 1; ball_i >= 0; ball_i-- {
+			dist := math.Sqrt((float64(g.hero.X())-g.energy_balls[ball_i].X)*(float64(g.hero.X())-g.energy_balls[ball_i].X) +
+				(float64(g.hero.Y())-g.energy_balls[ball_i].Y)*(float64(g.hero.Y())-g.energy_balls[ball_i].Y))
 
-		if dist < 80 {
-			if g.energy_balls[ball_i].Dead != true {
-				g.energy_balls[ball_i].Dead = true
-				g.hero.CH(-20)
+			if dist < 80 {
+				if g.energy_balls[ball_i].Dead != true {
+					g.energy_balls[ball_i].Dead = true
+					g.hero.CH(-20)
 
-				if g.hero.Health > 100 {
-					g.hero.CH(g.hero.Health - 100)
+					if g.hero.Health > 100 {
+						g.hero.CH(g.hero.Health - 100)
+					}
 				}
 			}
 		}
-	}
 
-	ab := g.energy_balls[:0]
-	for _, ball := range g.energy_balls {
-		if !ball.Dead {
-			ab = append(ab, ball)
+		ab := g.energy_balls[:0]
+		for _, ball := range g.energy_balls {
+			if !ball.Dead {
+				ab = append(ab, ball)
+			}
+		}
+		g.energy_balls = ab
+
+		ap := g.projectiles[:0]
+		for _, projectile := range g.projectiles {
+			if !projectile.Dead {
+				ap = append(ap, projectile)
+			}
+		}
+		g.projectiles = ap
+
+		g.ticks++
+		g.hero.Update(g.ticks)
+
+		deadc := 0
+		count := 0
+		for _, enemy := range g.enemies {
+			count++
+			if enemy.Health <= 0 {
+				deadc++
+			}
+		}
+
+		if deadc/count == 1 {
+			g.level++
+		}
+
+		if g.hero.Health <= 0 {
+			g.level = 4
 		}
 	}
-	g.energy_balls = ab
 
-	ap := g.projectiles[:0]
-	for _, projectile := range g.projectiles {
-		if !projectile.Dead {
-			ap = append(ap, projectile)
-		}
-	}
-	g.projectiles = ap
-
-	g.ticks++
-	g.hero.Update(g.ticks)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	img := g.background1
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(4.15, 4.15)
-	op.GeoM.Translate(-50, -150)
-	screen.DrawImage(img, op) // random image stuff
+	if g.level == 0 {
+		home_img := g.home_screen
+		homeop := &ebiten.DrawImageOptions{}
+		homeop.GeoM.Scale(1.1, 1.1)
+		homeop.GeoM.Translate(0, 30)
+		screen.DrawImage(home_img, homeop)
+	} else if g.level == 1 {
+		img := g.background1
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(4.15, 4.15)
+		op.GeoM.Translate(-50, -150)
+		screen.DrawImage(img, op) // random image stuff
 
-	for ball_i := range g.energy_balls {
-		if g.energy_balls[ball_i].Dead != true {
-			ball_img := g.energy_ball_img
-			ball_op := &ebiten.DrawImageOptions{}
-			ball_op.GeoM.Scale(2, 2)
-			ball_op.GeoM.Translate(g.energy_balls[ball_i].X, g.energy_balls[ball_i].Y)
-			screen.DrawImage(ball_img, ball_op)
-		} else {
-			continue
+		for ball_i := range g.energy_balls {
+			if g.energy_balls[ball_i].Dead != true {
+				ball_img := g.energy_ball_img
+				ball_op := &ebiten.DrawImageOptions{}
+				ball_op.GeoM.Scale(2, 2)
+				ball_op.GeoM.Translate(g.energy_balls[ball_i].X, g.energy_balls[ball_i].Y)
+				screen.DrawImage(ball_img, ball_op)
+			} else {
+				continue
+			}
 		}
-	}
 
-	for projectile := range g.projectiles {
-		g.projectiles[projectile].ProjectileDraw(screen)
-	}
+		for projectile := range g.projectiles {
+			g.projectiles[projectile].ProjectileDraw(screen)
+		}
 
-	for enemy := range g.enemies {
-		g.enemies[enemy].BacteriaDraw(screen, g.ticks)
+		for enemy := range g.enemies {
+			g.enemies[enemy].BacteriaDraw(screen, g.ticks)
+		}
+		g.hero.HeroDraw(screen)
+		g.sl_bar.SLDraw(screen, g.current_projectile)
+	} else if g.level == 2 {
+		img := g.lvl2_bkg
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(1, 1)
+		op.GeoM.Translate(0, -150)
+		screen.DrawImage(img, op) // random image stuff
+
+		for ball_i := range g.energy_balls {
+			if g.energy_balls[ball_i].Dead != true {
+				ball_img := g.energy_ball_img
+				ball_op := &ebiten.DrawImageOptions{}
+				ball_op.GeoM.Scale(2, 2)
+				ball_op.GeoM.Translate(g.energy_balls[ball_i].X, g.energy_balls[ball_i].Y)
+				screen.DrawImage(ball_img, ball_op)
+			} else {
+				continue
+			}
+		}
+
+		for projectile := range g.projectiles {
+			g.projectiles[projectile].ProjectileDraw(screen)
+		}
+
+		for enemy := range g.enemies {
+			g.enemies[enemy].BacteriaDraw(screen, g.ticks)
+		}
+		g.hero.HeroDraw(screen)
+		g.sl_bar.SLDraw(screen, g.current_projectile)
+	} else if g.level == 3 {
+		end_img := g.end_screen
+		endop := &ebiten.DrawImageOptions{}
+		endop.GeoM.Scale(1.1, 1.1)
+		endop.GeoM.Translate(0, 30)
+		screen.DrawImage(end_img, endop)
+	} else if g.level == 4 {
+		lose_img := g.lose_screen
+		loseop := &ebiten.DrawImageOptions{}
+		loseop.GeoM.Scale(1.1, 1.1)
+		loseop.GeoM.Translate(0, 30)
+		screen.DrawImage(lose_img, loseop)
 	}
-	g.hero.HeroDraw(screen)
-	g.sl_bar.SLDraw(screen, g.current_projectile)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -272,7 +465,7 @@ func main() {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
-	projectile_example_img, _, err := ebitenutil.NewImageFromFile("assets/projectile_examplex.png")
+	projectile_example_img, _, err := ebitenutil.NewImageFromFile("assets/projectile examplex.png")
 	if err != nil {
 		log.Fatal("NOOOO!!!!", err)
 	}
@@ -287,9 +480,29 @@ func main() {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
+	end, _, err := ebitenutil.NewImageFromFile("assets/end screen.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
+	}
+
+	home, _, err := ebitenutil.NewImageFromFile("assets/home screen.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
+	}
+
+	lvl2, _, err := ebitenutil.NewImageFromFile("assets/lvl2 background.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
+	}
+
+	lose, _, err := ebitenutil.NewImageFromFile("assets/you lose.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
+	}
+
 	game := &Game{
 		hero:                player.New(heroImg),
-		enemies:             enemy.NewEnemy(enemyImg, 5),
+		enemies:             enemy.NewEnemy(enemyImg, 5, false),
 		background1:         background1, // background is 384 x 216
 		projectile_img:      projectile_example_img,
 		current_projectile:  1,
@@ -298,6 +511,11 @@ func main() {
 		sl_bar:              *weaponselect.New(projectile_example_img, slbar_background),
 		energy_ball_img:     energy,
 		last_shot:           0,
+		enemy_img:           enemyImg,
+		home_screen:         home,
+		end_screen:          end,
+		lvl2_bkg:            lvl2,
+		lose_screen:         lose,
 	}
 
 	ebiten.SetWindowSize(1542, 897)

@@ -22,14 +22,17 @@ type Enemy struct {
 	XSpeed, YSpeed float64
 	AnimationSpeed int
 	AnimOffset     float64
-	dead           bool
+	Dead           bool
 	Health         int
-	vel            float64
-	dir            float64
-	last_shot      int
+	Del            float64
+	Dir            float64
+	Dast_shot      int
+	Dcale_x        int
+	Dcale_y        int // sorry, didn't want to make the capital letters make sensD
 }
 
-func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
+func NewEnemy(sprite *ebiten.Image, quantity int, level2 bool) []*Enemy {
+	boss_happened := false
 	enemies := make([]*Enemy, 0, quantity)
 	var spacing int16 = 128
 	sp_width, sp_height := 600, 300
@@ -66,21 +69,44 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			}
 		}
 
-		enemies = append(enemies, &Enemy{
-			Spritesheet:    sprite,
-			XSpeed:         1,
-			YSpeed:         1,
-			AnimationSpeed: 5,
-			AnimOffset:     float64(i),
-			State:          chooser.Pick().(int),
-			x:              bx,
-			y:              by,
-			dead:           false,
-			Health:         100,
-			dir:            0,
-			vel:            1,
-			last_shot:      0,
-		})
+		if boss_happened == false && level2 == true {
+			enemies = append(enemies, &Enemy{
+				Spritesheet:    sprite,
+				XSpeed:         1,
+				YSpeed:         1,
+				AnimationSpeed: 5,
+				AnimOffset:     float64(i),
+				State:          chooser.Pick().(int),
+				x:              bx,
+				y:              by,
+				Dead:           false,
+				Health:         100,
+				Dir:            0,
+				Del:            1,
+				Dast_shot:      0,
+				Dcale_x:        5,
+				Dcale_y:        5,
+			})
+			boss_happened = true
+		} else {
+			enemies = append(enemies, &Enemy{
+				Spritesheet:    sprite,
+				XSpeed:         1,
+				YSpeed:         1,
+				AnimationSpeed: 5,
+				AnimOffset:     float64(i),
+				State:          chooser.Pick().(int),
+				x:              bx,
+				y:              by,
+				Dead:           false,
+				Health:         100,
+				Dir:            0,
+				Del:            1,
+				Dast_shot:      0,
+				Dcale_x:        3,
+				Dcale_y:        3,
+			})
+		}
 	}
 	return enemies
 }
@@ -93,15 +119,20 @@ var damage int
 
 func (e *Enemy) Hit(ticks, damag int, special_3 bool) {
 	if special_3 {
-		if ticks-e.last_shot > 30 {
-			e.last_shot = ticks
+		if ticks-e.Dast_shot > 30 {
+			e.Dast_shot = ticks
 		}
 	} else {
-		if ticks-e.last_shot > 60 {
-			e.last_shot = ticks
+		if ticks-e.Dast_shot > 60 {
+			e.Dast_shot = ticks
 		}
 	}
-	damage = damag
+
+	if e.Dcale_x == 5 {
+		damage = damag / 2
+	} else {
+		damage = damag
+	}
 }
 
 func (e *Enemy) X() int {
@@ -113,7 +144,7 @@ func (e *Enemy) Y() int {
 }
 
 func (e *Enemy) DIR() float64 {
-	return e.dir
+	return e.Dir
 }
 
 func get_travel(e1, e2, d1, d2 float64) float64 {
@@ -134,14 +165,14 @@ func nangle(angle float64) float64 {
 
 func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 	if ticks > 100 {
-		if ticks-e.last_shot == 1 {
+		if ticks-e.Dast_shot == 1 {
 			e.Health -= damage
 		}
 	}
 
 	a_player := get_travel(e.x, e.y, px, py)
 	a_player = nangle(a_player)
-	e.dir += nangle(a_player-e.dir) * 0.7
+	e.Dir += nangle(a_player-e.Dir) * 0.7
 
 	for _, enemy := range enemies {
 		if float64(enemy.X()) == e.x && float64(enemy.Y()) == e.y {
@@ -151,7 +182,7 @@ func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 			if dist < 200 {
 				a_separation := get_travel(e.x, e.y, float64(enemy.X()), float64(enemy.Y()))
 				a_separation = nangle(a_separation)
-				e.dir += nangle(a_separation-e.dir+180) * 0.25
+				e.Dir += nangle(a_separation-e.Dir+180) * 0.25
 			}
 		}
 	}
@@ -170,7 +201,7 @@ func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 
 	mean_dir := float64(total) / float64(count)
 	mean_dir = nangle(mean_dir)
-	e.dir += nangle(mean_dir-e.dir) * 0.04
+	e.Dir += nangle(mean_dir-e.Dir) * 0.04
 
 	count = 0
 	totalx := 0
@@ -191,25 +222,25 @@ func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 
 	a_cohesion := get_travel(e.x, e.y, float64(mean_x), float64(mean_y))
 	a_cohesion = nangle(a_cohesion)
-	e.dir += nangle(a_cohesion-e.dir) * 0.01
+	e.Dir += nangle(a_cohesion-e.Dir) * 0.01
 
-	e.x += e.vel * math.Cos(e.dir*math.Pi/180)
-	e.y += e.vel * math.Sin(e.dir*math.Pi/180)
+	e.x += e.Del * math.Cos(e.Dir*math.Pi/180)
+	e.y += e.Del * math.Sin(e.Dir*math.Pi/180)
 
 	if e.y < 0-48 {
 		e.y = 0
-		e.dir = -e.dir
+		e.Dir = -e.Dir
 	} else if e.y > 746-96 {
 		e.y = 746 - 96
-		e.dir = -e.dir
+		e.Dir = -e.Dir
 	}
 
 	if e.x < 0-48 {
 		e.x = 0
-		e.dir = 180 - e.dir
+		e.Dir = 180 - e.Dir
 	} else if e.x > 1542-96 {
 		e.x = 1542 - 96
-		e.dir = 180 - e.dir
+		e.Dir = 180 - e.Dir
 	}
 }
 
@@ -236,7 +267,7 @@ func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 
 		var op ebiten.DrawImageOptions
 		jiggle := math.Round(math.Sin(float64(ticks)*0.5 + +e.AnimOffset))
-		op.GeoM.Scale(3, 3)
+		op.GeoM.Scale(float64(e.Dcale_x), float64(e.Dcale_y))
 		op.GeoM.Translate(e.x, e.y+jiggle)
 
 		screen.DrawImage(cropped, &op)
