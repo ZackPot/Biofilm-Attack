@@ -83,7 +83,7 @@ func (g *Game) Update() error {
 				g.shooting_cooldown = 60
 				g.FireShot()
 			case 2:
-				g.shooting_cooldown = 120
+				g.shooting_cooldown = 180
 				g.FireShot()
 			case 3:
 				g.shooting_cooldown = 30
@@ -106,17 +106,12 @@ func (g *Game) Update() error {
 	for _, enemy := range g.enemies {
 		if enemy.Health > 0 {
 			enemy.BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
-			enemy_half := 48
-			player_half := 80
+			x_dist := float64(enemy.X() - g.hero.X())
+			y_dist := float64(enemy.Y() - g.hero.Y())
 
-			enemy_x := float64(enemy.X() - enemy_half)
-			enemy_y := float64(enemy.Y() - enemy_half)
-			player_x := float64(g.hero.X() - player_half)
-			player_y := float64(g.hero.Y() - player_half)
+			dist = math.Sqrt(x_dist*x_dist + y_dist*y_dist)
 
-			dist = math.Sqrt((player_x-enemy_x)*(player_x-enemy_x) + (player_y-enemy_y)*(player_y-enemy_y))
-
-			if dist < 40 {
+			if dist < 75 {
 				g.hero.Hit(g.ticks, 20)
 			}
 		} else {
@@ -136,7 +131,7 @@ func (g *Game) Update() error {
 				case 1:
 					enemy.Hit(g.ticks, 50, false)
 				case 2:
-					enemy.Hit(g.ticks, 75, false)
+					enemy.Hit(g.ticks, 100, false)
 				case 3:
 					enemy.Hit(g.ticks, 25, true)
 				case 4:
