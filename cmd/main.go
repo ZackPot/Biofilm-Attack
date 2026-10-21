@@ -44,44 +44,46 @@ var last_shot = 0
 var dist float64
 
 func (g *Game) Update() error {
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		if g.ticks-last_shot > g.shooting_cooldown {
-			last_shot = g.ticks
+	if g.hero.Health > 0 {
+		if ebiten.IsKeyPressed(ebiten.KeySpace) {
+			if g.ticks-last_shot > g.shooting_cooldown {
+				last_shot = g.ticks
 
-			switch g.hero.Direction() {
-			case 1:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-					int(g.hero.Y()),
-					0, -g.projectile_velocity, g.current_projectile,
-					g.projectile_img))
+				switch g.hero.Direction() {
+				case 1:
+					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+						int(g.hero.Y()),
+						0, -g.projectile_velocity, g.current_projectile,
+						g.projectile_img))
 
-			case 2:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-					int(g.hero.Y()),
-					0, g.projectile_velocity, g.current_projectile,
-					g.projectile_img))
+				case 2:
+					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+						int(g.hero.Y()),
+						0, g.projectile_velocity, g.current_projectile,
+						g.projectile_img))
 
-			case 3:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-					int(g.hero.Y()),
-					-g.projectile_velocity, 0, g.current_projectile,
-					g.projectile_img))
+				case 3:
+					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+						int(g.hero.Y()),
+						-g.projectile_velocity, 0, g.current_projectile,
+						g.projectile_img))
 
-			case 4:
-				g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-					int(g.hero.Y()),
-					g.projectile_velocity, 0, g.current_projectile,
-					g.projectile_img))
-			} // I don't like fancy logic
+				case 4:
+					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+						int(g.hero.Y()),
+						g.projectile_velocity, 0, g.current_projectile,
+						g.projectile_img))
+				} // I don't like fancy logic
+			}
+		} else if ebiten.IsKeyPressed(ebiten.Key1) {
+			g.current_projectile = 1
+		} else if ebiten.IsKeyPressed(ebiten.Key2) {
+			g.current_projectile = 2
+		} else if ebiten.IsKeyPressed(ebiten.Key3) {
+			g.current_projectile = 3
+		} else if ebiten.IsKeyPressed(ebiten.Key4) {
+			g.current_projectile = 4
 		}
-	} else if ebiten.IsKeyPressed(ebiten.Key1) {
-		g.current_projectile = 1
-	} else if ebiten.IsKeyPressed(ebiten.Key2) {
-		g.current_projectile = 2
-	} else if ebiten.IsKeyPressed(ebiten.Key3) {
-		g.current_projectile = 3
-	} else if ebiten.IsKeyPressed(ebiten.Key4) {
-		g.current_projectile = 4
 	}
 
 	for _, enemy := range g.enemies {
