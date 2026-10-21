@@ -38,42 +38,59 @@ type Game struct {
 	sl_bar              weaponselect.Sl_bar
 	energy_ball_img     *ebiten.Image
 	energy_balls        []EnergyBall
+	last_shot           int
 }
 
-var last_shot = 0
 var dist float64
+
+func (g *Game) FireShot() {
+	if g.ticks-g.last_shot > g.shooting_cooldown {
+		g.last_shot = g.ticks
+
+		switch g.hero.Direction() {
+		case 1:
+			g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+				int(g.hero.Y()),
+				0, -g.projectile_velocity, g.current_projectile,
+				g.projectile_img, false))
+
+		case 2:
+			g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+				int(g.hero.Y()),
+				0, g.projectile_velocity, g.current_projectile,
+				g.projectile_img, false))
+
+		case 3:
+			g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+				int(g.hero.Y()),
+				-g.projectile_velocity, 0, g.current_projectile,
+				g.projectile_img, false))
+
+		case 4:
+			g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
+				int(g.hero.Y()),
+				g.projectile_velocity, 0, g.current_projectile,
+				g.projectile_img, false))
+		} // I don't like fancy logic
+	}
+}
 
 func (g *Game) Update() error {
 	if g.hero.Health > 0 {
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
-			if g.ticks-last_shot > g.shooting_cooldown {
-				last_shot = g.ticks
-
-				switch g.hero.Direction() {
-				case 1:
-					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-						int(g.hero.Y()),
-						0, -g.projectile_velocity, g.current_projectile,
-						g.projectile_img))
-
-				case 2:
-					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-						int(g.hero.Y()),
-						0, g.projectile_velocity, g.current_projectile,
-						g.projectile_img))
-
-				case 3:
-					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-						int(g.hero.Y()),
-						-g.projectile_velocity, 0, g.current_projectile,
-						g.projectile_img))
-
-				case 4:
-					g.projectiles = append(g.projectiles, projectile.SpawnProjectile(int(g.hero.X()),
-						int(g.hero.Y()),
-						g.projectile_velocity, 0, g.current_projectile,
-						g.projectile_img))
-				} // I don't like fancy logic
+			switch g.current_projectile {
+			case 1:
+				g.shooting_cooldown = 30
+				g.FireShot()
+			case 2:
+				g.shooting_cooldown = 50
+				g.FireShot()
+			case 3:
+				g.shooting_cooldown = 10
+				g.FireShot()
+			case 4:
+				g.shooting_cooldown = 40
+				g.FireShot()
 			}
 		} else if ebiten.IsKeyPressed(ebiten.Key1) {
 			g.current_projectile = 1
@@ -97,15 +114,61 @@ func (g *Game) Update() error {
 		}
 	}
 
-	for _, projectile := range g.projectiles {
-		projectile.ProjectileUpdate()
+	for _, cprojectile := range g.projectiles {
+		cprojectile.ProjectileUpdate()
 
 		for _, enemy := range g.enemies {
-			dist = math.Sqrt(float64(enemy.X()-projectile.X())*float64(enemy.X()-projectile.X()) +
-				float64(enemy.Y()-projectile.Y())*float64(enemy.Y()-projectile.Y()))
+			dist = math.Sqrt(float64(enemy.X()-cprojectile.X())*float64(enemy.X()-cprojectile.X()) +
+				float64(enemy.Y()-cprojectile.Y())*float64(enemy.Y()-cprojectile.Y()))
 
 			if dist < 70 {
-				enemy.Hit(g.ticks, 50)
+				switch cprojectile.State {
+				case 1:
+					enemy.Hit(g.ticks, 50)
+				case 2:
+					enemy.Hit(g.ticks, 75)
+				case 3:
+					enemy.Hit(g.ticks, 25)
+				case 4:
+					cprojectile.MarkDead()
+					enemy.Hit(g.ticks, 50)
+					p1 := pick(1, 4)
+					p2 := pick(1, 4)
+
+					for p1 == p2 {
+						p2 = pick(1, 4)
+					}
+
+					switch p1 {
+					case 1:
+						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), -g.projectile_velocity, 0, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp1)
+					case 2:
+						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), g.projectile_velocity, 0, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp1)
+					case 3:
+						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, g.projectile_velocity, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp1)
+					case 4:
+						pp1 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, -g.projectile_velocity, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp1)
+					}
+
+					switch p2 {
+					case 1:
+						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), -g.projectile_velocity, 0, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp2)
+					case 2:
+						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), g.projectile_velocity, 0, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp2)
+					case 3:
+						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, g.projectile_velocity, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp2)
+					case 4:
+						pp2 := projectile.SpawnProjectile(enemy.X(), enemy.Y(), 0, -g.projectile_velocity, 1, g.projectile_img, true)
+						g.projectiles = append(g.projectiles, pp2)
+					}
+				}
 			}
 		}
 	}
@@ -132,6 +195,22 @@ func (g *Game) Update() error {
 			}
 		}
 	}
+
+	ab := g.energy_balls[:0]
+	for _, ball := range g.energy_balls {
+		if !ball.Dead {
+			ab = append(ab, ball)
+		}
+	}
+	g.energy_balls = ab
+
+	ap := g.projectiles[:0]
+	for _, projectile := range g.projectiles {
+		if !projectile.Dead {
+			ap = append(ap, projectile)
+		}
+	}
+	g.projectiles = ap
 
 	g.ticks++
 	g.hero.Update(g.ticks)
@@ -213,6 +292,7 @@ func main() {
 		projectile_velocity: 10,
 		sl_bar:              *weaponselect.New(projectile_example_img, slbar_background),
 		energy_ball_img:     energy,
+		last_shot:           0,
 	}
 
 	ebiten.SetWindowSize(1542, 897)

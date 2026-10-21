@@ -7,29 +7,32 @@ import (
 )
 
 type Projectile struct {
-	x     int
-	y     int
-	vel_x int
-	vel_y int
-	state int
-	img   *ebiten.Image
-	dead  bool
+	x         int
+	y         int
+	vel_x     int
+	vel_y     int
+	State     int
+	img       *ebiten.Image
+	Dead      bool
+	special_4 bool
 }
 
-func SpawnProjectile(x, y, vel_x, vel_y, state int, spritesheet *ebiten.Image) *Projectile {
+func SpawnProjectile(x, y, vel_x, vel_y, state int, spritesheet *ebiten.Image, special_4 bool) *Projectile {
+
 	return &Projectile{
-		x:     x,
-		y:     y,
-		vel_x: vel_x,
-		vel_y: vel_y,
-		state: state,
-		img:   spritesheet,
-		dead:  false,
+		x:         x,
+		y:         y,
+		vel_x:     vel_x,
+		vel_y:     vel_y,
+		State:     state,
+		img:       spritesheet,
+		Dead:      false,
+		special_4: special_4,
 	}
 }
 
 func (pr *Projectile) MarkDead() {
-	pr.dead = true
+	pr.Dead = true
 }
 
 func (pr *Projectile) X() int {
@@ -45,12 +48,24 @@ func (pr *Projectile) ProjectileUpdate() {
 	pr.y = pr.vel_y + pr.y
 }
 
+var start_x int
+var start_y int
+var end_x int
+var end_y int
+
 func (pr *Projectile) ProjectileDraw(screen *ebiten.Image) {
-	if !pr.dead {
-		var start_x int = 32*pr.state - 32
-		var start_y int = 0
-		var end_x int = 32 * pr.state
-		var end_y int = 32
+	if !pr.Dead {
+		if pr.special_4 == true {
+			start_x = 32*4 - 32
+			start_y = 0
+			end_x = 32 * 4
+			end_y = 32
+		} else {
+			start_x = 32*pr.State - 32
+			start_y = 0
+			end_x = 32 * pr.State
+			end_y = 32
+		}
 
 		crop := image.Rect(start_x, start_y, end_x, end_y)
 		subImg := pr.img.SubImage(crop)
