@@ -18,7 +18,6 @@ type Projectile struct {
 }
 
 func SpawnProjectile(x, y, vel_x, vel_y, state int, spritesheet *ebiten.Image, special_4 bool) *Projectile {
-
 	return &Projectile{
 		x:         x,
 		y:         y,
@@ -46,6 +45,10 @@ func (pr *Projectile) Y() int {
 func (pr *Projectile) ProjectileUpdate() {
 	pr.x = pr.vel_x + pr.x
 	pr.y = pr.vel_y + pr.y
+
+	if pr.y > 600 {
+		pr.MarkDead()
+	}
 }
 
 var start_x int
@@ -72,8 +75,8 @@ func (pr *Projectile) ProjectileDraw(screen *ebiten.Image) {
 		crop_final := subImg.(*ebiten.Image)
 
 		var op ebiten.DrawImageOptions
-		op.GeoM.Scale(5, 5)
-		op.GeoM.Translate(float64(pr.x), float64(pr.y))
+		op.GeoM.Scale(3, 3)
+		op.GeoM.Translate(float64(pr.x)+30, float64(pr.y)+30)
 
 		screen.DrawImage(crop_final, &op)
 	}

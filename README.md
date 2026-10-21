@@ -14,3 +14,7 @@ A game that teaches the types of enzymes someone would find in a chronic wound t
 
 https://github.com/user-attachments/assets/e83b23a8-e383-41bd-b7b7-816eee0cb83c
 
+
+## AI Slop Disclaimer
+
+I know some of the images were made with AI. I can't draw pixel art backgrounds and I don't have enough time, okay? Feel free to email any pixel art to zacharypotishko@gmail.com . All the logic is made by me, though. You can check my commit messages if you want proof.
