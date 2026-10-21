@@ -104,13 +104,23 @@ func (g *Game) Update() error {
 	}
 
 	for _, enemy := range g.enemies {
-		enemy.BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
+		if enemy.Health > 0 {
+			enemy.BacteriaUpdate(g.ticks, float64(g.hero.X()), float64(g.hero.Y()), g.enemies)
+			enemy_half := 48
+			player_half := 80
 
-		dist = math.Sqrt(float64(enemy.X()-g.hero.X())*float64(enemy.X()-g.hero.X()) +
-			float64(enemy.Y()-g.hero.Y())*float64(enemy.Y()-g.hero.Y()))
+			enemy_x := float64(enemy.X() - enemy_half)
+			enemy_y := float64(enemy.Y() - enemy_half)
+			player_x := float64(g.hero.X() - player_half)
+			player_y := float64(g.hero.Y() - player_half)
 
-		if dist < 50 {
-			g.hero.Hit(g.ticks, 20)
+			dist = math.Sqrt((player_x-enemy_x)*(player_x-enemy_x) + (player_y-enemy_y)*(player_y-enemy_y))
+
+			if dist < 40 {
+				g.hero.Hit(g.ticks, 20)
+			}
+		} else {
+			continue
 		}
 	}
 

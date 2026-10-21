@@ -23,7 +23,7 @@ type Enemy struct {
 	AnimationSpeed int
 	AnimOffset     float64
 	dead           bool
-	health         int
+	Health         int
 	vel            float64
 	dir            float64
 	last_shot      int
@@ -76,7 +76,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 			x:              bx,
 			y:              by,
 			dead:           false,
-			health:         100,
+			Health:         100,
 			dir:            0,
 			vel:            1,
 			last_shot:      0,
@@ -86,7 +86,7 @@ func NewEnemy(sprite *ebiten.Image, quantity int) []*Enemy {
 }
 
 func (e *Enemy) CH(amount int) {
-	e.health -= amount
+	e.Health -= amount
 }
 
 var damage int
@@ -129,7 +129,7 @@ func nangle(angle float64) float64 {
 func (e *Enemy) BacteriaUpdate(ticks int, px, py float64, enemies []*Enemy) {
 	if ticks > 100 {
 		if ticks-e.last_shot == 1 {
-			e.health -= damage
+			e.Health -= damage
 		}
 	}
 
@@ -215,11 +215,11 @@ const thickness = 3
 
 func (e *Enemy) DrawHealth(screen *ebiten.Image, health int) {
 	vector.FillRect(screen, float32(e.x-width/2)+width_adjust, float32(e.y-offset), float32(width), float32(height), color.RGBA{R: 255, G: 255, B: 255, A: 255}, false)
-	vector.FillRect(screen, float32(e.x-width/2+thickness)+width_adjust, float32(e.y-offset+thickness), float32(width-thickness*2)*(float32(e.health)/100.0), float32(height-thickness*2), color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
+	vector.FillRect(screen, float32(e.x-width/2+thickness)+width_adjust, float32(e.y-offset+thickness), float32(width-thickness*2)*(float32(e.Health)/100.0), float32(height-thickness*2), color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
 }
 
 func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
-	if e.health > 0 {
+	if e.Health > 0 {
 		var start_x int = 32*e.State - 32
 		var start_y int = 0
 		var end_x int = 32 * e.State
@@ -234,6 +234,6 @@ func (e *Enemy) BacteriaDraw(screen *ebiten.Image, ticks int) {
 		op.GeoM.Translate(e.x, e.y+jiggle)
 
 		screen.DrawImage(cropped, &op)
-		e.DrawHealth(screen, e.health)
+		e.DrawHealth(screen, e.Health)
 	}
 }
