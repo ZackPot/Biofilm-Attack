@@ -16,7 +16,7 @@ type Player struct {
 	AnimationSpeed int
 	HasMoved       bool
 	direction      int
-	health         int
+	Health         int
 	last_shot      int
 }
 
@@ -31,7 +31,7 @@ func New(sprite *ebiten.Image) *Player {
 		AnimationSpeed: 20,
 		HasMoved:       false,
 		direction:      1,
-		health:         100,
+		Health:         100,
 		last_shot:      0,
 	}
 }
@@ -58,13 +58,13 @@ func (p *Player) Y() int {
 }
 
 func (p *Player) CH(factor int) {
-	p.health -= factor
+	p.Health -= factor
 }
 
 func (p *Player) Update(ticks int) {
 	if ticks > 100 {
 		if ticks-p.last_shot == 1 {
-			p.health -= damage
+			p.Health -= damage
 		}
 	}
 
@@ -124,11 +124,11 @@ const thickness = 3
 
 func (p *Player) DrawHealth(screen *ebiten.Image, health int) {
 	vector.FillRect(screen, float32(p.x-width/2)+width_adjust, float32(p.y-offset), float32(width), float32(height), color.RGBA{R: 255, G: 255, B: 255, A: 255}, false)
-	vector.FillRect(screen, float32(p.x-width/2+thickness)+width_adjust, float32(p.y-offset+thickness), float32(width-thickness*2)*(float32(p.health)/100.0), float32(height-thickness*2), color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
+	vector.FillRect(screen, float32(p.x-width/2+thickness)+width_adjust, float32(p.y-offset+thickness), float32(width-thickness*2)*(float32(p.Health)/100.0), float32(height-thickness*2), color.RGBA{R: 0, G: 255, B: 0, A: 255}, false)
 }
 
 func (p *Player) HeroDraw(screen *ebiten.Image) {
-	if p.health > 0 {
+	if p.Health > 0 {
 		var start_x int = 32*p.State - 32
 		var start_y int = 0
 		var end_x int = 32 * p.State
@@ -142,6 +142,6 @@ func (p *Player) HeroDraw(screen *ebiten.Image) {
 		op.GeoM.Translate(p.x, p.y)
 
 		screen.DrawImage(cropped, &op)
-		p.DrawHealth(screen, p.health)
+		p.DrawHealth(screen, p.Health)
 	}
 }

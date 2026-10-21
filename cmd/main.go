@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"math"
+	"math/rand"
 
 	enemy "biofilm-attack/internal/bacteria"
 	player "biofilm-attack/internal/player"
@@ -12,6 +13,16 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
+
+func pick(a, b int) int {
+	return a + rand.Intn(b-a+1)
+} // credit to https://programming-idioms.org/idiom/15/pick-uniformly-a-random-integer-in-a-b/168/go
+
+type EnergyBall struct {
+	X    float64
+	Y    float64
+	Dead bool
+}
 
 type Game struct {
 	hero                *player.Player
@@ -25,6 +36,8 @@ type Game struct {
 	projectile_velocity int
 	shooting_cooldown   int // do you like my beautiful code formatting
 	sl_bar              weaponselect.Sl_bar
+	energy_ball_img     *ebiten.Image
+	energy_balls        []EnergyBall
 }
 
 var last_shot = 0
@@ -77,7 +90,7 @@ func (g *Game) Update() error {
 		dist = math.Sqrt(float64(enemy.X()-g.hero.X())*float64(enemy.X()-g.hero.X()) +
 			float64(enemy.Y()-g.hero.Y())*float64(enemy.Y()-g.hero.Y()))
 
-		if dist < 90 {
+		if dist < 50 {
 			g.hero.Hit(g.ticks, 20)
 		}
 	}
@@ -95,6 +108,29 @@ func (g *Game) Update() error {
 		}
 	}
 
+	if g.ticks%420 == 0 {
+		sp_width, sp_height := 600, 300
+		bx, by := float64(pick(771-sp_width, 771+sp_width)), float64(pick(448-sp_height, 448+sp_height)-150)
+
+		g.energy_balls = append(g.energy_balls, EnergyBall{bx, by, false})
+	}
+
+	for ball_i := len(g.energy_balls) - 1; ball_i >= 0; ball_i-- {
+		dist := math.Sqrt((float64(g.hero.X())-g.energy_balls[ball_i].X)*(float64(g.hero.X())-g.energy_balls[ball_i].X) +
+			(float64(g.hero.Y())-g.energy_balls[ball_i].Y)*(float64(g.hero.Y())-g.energy_balls[ball_i].Y))
+
+		if dist < 80 {
+			if g.energy_balls[ball_i].Dead != true {
+				g.energy_balls[ball_i].Dead = true
+				g.hero.CH(-20)
+
+				if g.hero.Health > 100 {
+					g.hero.CH(g.hero.Health - 100)
+				}
+			}
+		}
+	}
+
 	g.ticks++
 	g.hero.Update(g.ticks)
 	return nil
@@ -106,6 +142,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	op.GeoM.Scale(4.15, 4.15)
 	op.GeoM.Translate(-50, -150)
 	screen.DrawImage(img, op) // random image stuff
+
+	for ball_i := range g.energy_balls {
+		if g.energy_balls[ball_i].Dead != true {
+			ball_img := g.energy_ball_img
+			ball_op := &ebiten.DrawImageOptions{}
+			ball_op.GeoM.Scale(2, 2)
+			ball_op.GeoM.Translate(g.energy_balls[ball_i].X, g.energy_balls[ball_i].Y)
+			screen.DrawImage(ball_img, ball_op)
+		} else {
+			continue
+		}
+	}
 
 	for projectile := range g.projectiles {
 		g.projectiles[projectile].ProjectileDraw(screen)
@@ -148,6 +196,11 @@ func main() {
 		log.Fatal("NOOOO!!!!", err)
 	}
 
+	energy, _, err := ebitenutil.NewImageFromFile("assets/energy balls.png")
+	if err != nil {
+		log.Fatal("NOOOO!!!!", err)
+	}
+
 	game := &Game{
 		hero:                player.New(heroImg),
 		enemies:             enemy.NewEnemy(enemyImg, 5),
@@ -157,6 +210,7 @@ func main() {
 		shooting_cooldown:   30,
 		projectile_velocity: 10,
 		sl_bar:              *weaponselect.New(projectile_example_img, slbar_background),
+		energy_ball_img:     energy,
 	}
 
 	ebiten.SetWindowSize(1542, 897)
