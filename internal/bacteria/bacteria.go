@@ -91,9 +91,15 @@ func (e *Enemy) CH(amount int) {
 
 var damage int
 
-func (e *Enemy) Hit(ticks, damag int) {
-	if ticks-e.last_shot > 60 {
-		e.last_shot = ticks
+func (e *Enemy) Hit(ticks, damag int, special_3 bool) {
+	if special_3 {
+		if ticks-e.last_shot > 30 {
+			e.last_shot = ticks
+		}
+	} else {
+		if ticks-e.last_shot > 60 {
+			e.last_shot = ticks
+		}
 	}
 	damage = damag
 }

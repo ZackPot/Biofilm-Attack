@@ -80,16 +80,16 @@ func (g *Game) Update() error {
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
 			switch g.current_projectile {
 			case 1:
-				g.shooting_cooldown = 30
+				g.shooting_cooldown = 60
 				g.FireShot()
 			case 2:
-				g.shooting_cooldown = 50
+				g.shooting_cooldown = 120
 				g.FireShot()
 			case 3:
-				g.shooting_cooldown = 10
+				g.shooting_cooldown = 30
 				g.FireShot()
 			case 4:
-				g.shooting_cooldown = 40
+				g.shooting_cooldown = 120
 				g.FireShot()
 			}
 		} else if ebiten.IsKeyPressed(ebiten.Key1) {
@@ -134,14 +134,14 @@ func (g *Game) Update() error {
 			if dist < 70 {
 				switch cprojectile.State {
 				case 1:
-					enemy.Hit(g.ticks, 50)
+					enemy.Hit(g.ticks, 50, false)
 				case 2:
-					enemy.Hit(g.ticks, 75)
+					enemy.Hit(g.ticks, 75, false)
 				case 3:
-					enemy.Hit(g.ticks, 25)
+					enemy.Hit(g.ticks, 25, true)
 				case 4:
 					cprojectile.MarkDead()
-					enemy.Hit(g.ticks, 50)
+					enemy.Hit(g.ticks, 50, false)
 					p1 := pick(1, 4)
 					p2 := pick(1, 4)
 
